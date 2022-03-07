@@ -74,6 +74,10 @@ namespace CFPL
             List<Tokens> t = new List<Tokens>(scanner.Tokens);
             interpreter = new Interpreter(scanner.Tokens);
             errorInterpreter = interpreter.Parse();
+            if(errorInterpreter == 0)
+            {
+                Console.WriteLine("Parsing Complete"); 
+            }
 
         }
 

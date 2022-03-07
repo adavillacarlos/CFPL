@@ -70,13 +70,13 @@ namespace CFPL
                         if (getNextChar() == '=') // == 
                         {
                             string temp = "" + x + getNextChar();
-                            item = new Tokens(TokenType.EQUAL, temp, null, line); //adding the string as a token to the list
+                            item = new Tokens(TokenType.EQUALS, temp, null, line); //adding the string as a token to the list
                             tokens.Add(item);
                             charCounter += 2;
                         }
                         else
                         {
-                            item = new Tokens(TokenType.EQUAL, x.ToString(), null, line);
+                            item = new Tokens(TokenType.EQUALS, x.ToString(), null, line);
                             tokens.Add(item);
                             charCounter++;
                         }

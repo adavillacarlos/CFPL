@@ -23,7 +23,8 @@ namespace CFPL
         {
             tokens = new List<Tokens>(t);
             tCounter = tCounter2 = whileStartCounter = whileStopCounter = 0;
-            foundStart = false; 
+            foundStart = false;
+            map = new Dictionary<string, object>();
 
         }
         public int Parse()
@@ -33,11 +34,11 @@ namespace CFPL
             {
                 while(tCounter < tokens.Count)
                 {
-
+                    Console.WriteLine("LEXEME" + tokens[tCounter + 1].Lexeme);
                     switch (tokens[tCounter].Type)
                     {
                         case TokenType.VAR:
-                            Console.WriteLine("Variable: " + tokens[tCounter+1].Lexeme);
+
                             if (foundStart)
                             {
                                 Console.WriteLine("Invalid Variable Declaration"); 
@@ -46,23 +47,60 @@ namespace CFPL
                             } else
                             {
                                 tCounter++;
-                                varList.Add(tokens[tCounter].Lexeme);
                                 ParseVar(); 
                             }
                             break;
                         case TokenType.AS:
-                            tCounter++; 
+                            tCounter++;
+                            funcAs(); 
                             break;
                         case TokenType.START:
+                            tCounter++; 
                             break;
                         case TokenType.STOP:
+                            tCounter++; 
                             break;
-                         default:
+                        case TokenType.IDENTIFIER:
+                            break;
+                        case TokenType.INT_LIT:
+                            temp = (int)tokens[tCounter].Literal;
+                            tCounter++;
+                            break;
+                        default:
                             break; 
                     }
-                   
                 }
                 return 0; 
+            }
+        }
+
+        private void funcAs()
+        {
+            if (tokens[tCounter].Type == TokenType.INT)
+            {
+                Console.WriteLine("Inside As");
+                foreach (string x in varList)
+                {
+                    if (declared.ContainsKey(x))
+                    {
+                        if (declared[x].GetType() == typeof(Int32))
+                        {
+                            map.Add(x, (Int32)declared[x]);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Type Error at Line: " + tokens[tCounter].Line);
+                        }
+                    }
+                    else
+                    {
+                        map.Add(x, 0);
+                        //Console.WriteLine("Inside AS: " + x); 
+                    }
+
+                }
+                tCounter++;
+                varList.Clear();
             }
         }
 
@@ -73,7 +111,23 @@ namespace CFPL
             {
                 varList.Add(tokens[tCounter].Lexeme);
                 tCounter++;
-                Console.WriteLine("PARSE VAR: " + tokens[tCounter].Lexeme); 
+                if (tokens[tCounter].Type == TokenType.EQUALS)
+                {
+                    temp_ident = tokens[tCounter - 1].Lexeme;
+                    tCounter++;
+                    switch (tokens[tCounter].Type)
+                    {
+                        case TokenType.INT_LIT:
+                            declared.Add(temp_ident, (int)tokens[tCounter].Literal);
+                            tCounter++;
+                            break;
+                        default:
+                            Console.WriteLine("Syntax Error");
+                            tCounter++; 
+                            break; 
+
+                    }
+                }
             } else
             {
               Console.WriteLine("Invalid variable declaration");
