@@ -29,6 +29,7 @@ namespace CFPL
             line = 0;
             currString = ""; 
             charCounter = 0;
+            errorMsg = new List<string>();
         }
 
         //Process the entire string
@@ -42,8 +43,8 @@ namespace CFPL
                 i++;
                 charCounter = 0; 
             }
-            //return errorMsg.Count != 0 ? 1 : 0;
-            return 0; 
+            return errorMsg.Count != 0 ? 1 : 0; 
+             
         }
 
         public char getNextChar()
@@ -103,8 +104,10 @@ namespace CFPL
                             tokens.Add(item);
                             charCounter++;
                         }
-                        break; 
-
+                        break;
+                    case ' ':
+                        charCounter++;
+                        break;
                     default:
                         if (isDigit(x))
                         {
@@ -119,7 +122,6 @@ namespace CFPL
                         }
                         else if (isChar(x))
                         {
-                            Console.WriteLine(x); 
                             CharVal(x); 
                         } else
                         {
@@ -170,43 +172,42 @@ namespace CFPL
             switch (temp)
             {
                 case "START":
-                    item = new Tokens(TokenType.START, x.ToString(), null, line);
-                    Console.WriteLine("START");
+                    item = new Tokens(TokenType.START,temp, null, line);
                     tokens.Add(item);
                     break;
                 case "STOP":
-                    item = new Tokens(TokenType.STOP, x.ToString(), null, line);
+                    item = new Tokens(TokenType.STOP, temp, null, line);
                     tokens.Add(item);
                     Console.WriteLine("STOP");
                     break;
                 case "VAR":
-                    item = new Tokens(TokenType.VAR, x.ToString(), null, line);
+                    item = new Tokens(TokenType.VAR, temp, null, line);
                     tokens.Add(item);
                     break;
                 case "AS":
-                    item = new Tokens(TokenType.AS, x.ToString(), null, line);
+                    item = new Tokens(TokenType.AS, temp, null, line);
                     tokens.Add(item);
                     break;
                 case "INT":
-                    item = new Tokens(TokenType.INT, x.ToString(), null, line);
+                    item = new Tokens(TokenType.INT, temp, null, line);
                     tokens.Add(item);
                     break;
                 case "FLOAT":
-                    item = new Tokens(TokenType.FLOAT, x.ToString(), null, line);
+                    item = new Tokens(TokenType.FLOAT, temp, null, line);
                     tokens.Add(item);
                     break;
                 case "BOOL":
-                    item = new Tokens(TokenType.BOOL, x.ToString(), null, line);
+                    item = new Tokens(TokenType.BOOL, temp, null, line);
                     tokens.Add(item);
                     break;
                 case "OUTPUT":
-                    item = new Tokens(TokenType.OUTPUT, x.ToString(), null, line);
+                    item = new Tokens(TokenType.OUTPUT, temp, null, line);
                     tokens.Add(item);
                     Console.WriteLine("OUTPUT"); 
                     break;
                 default:
-                    
-                    item = new Tokens(TokenType.IDENTIFIER, x.ToString(), null, line);
+                    item = new Tokens(TokenType.IDENTIFIER, temp, null, line);
+                    Console.WriteLine(item.Lexeme); 
                     tokens.Add(item);
                     break;
             }

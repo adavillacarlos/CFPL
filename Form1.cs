@@ -72,9 +72,7 @@ namespace CFPL
             scanner = new Scanner(fastColoredTextBox1.Text);
             errorScanner = scanner.Process();
             List<Tokens> t = new List<Tokens>(scanner.Tokens);
-
             interpreter = new Interpreter(scanner.Tokens);
-            
             errorInterpreter = interpreter.Parse();
 
         }

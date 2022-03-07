@@ -12,9 +12,6 @@ namespace CFPL
         private String lexeme;
         private Object literal;
         private int line;
-        private TokenType a;
-        private int v;
-        private object p;
 
         public Tokens(TokenType type, String lexeme, Object literal, int line)
         {
@@ -23,7 +20,6 @@ namespace CFPL
             this.literal = literal;
             this.line = line;
         }
-
 
         public TokenType Type
         {
