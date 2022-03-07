@@ -12,7 +12,12 @@ namespace CFPL
         private static int tCounter, tCounter2, whileStartCounter, whileStopCounter;
         private static bool foundStart;
         private static List<string> errorMsg;
-    
+
+        List<string> varList = new List<string>();
+
+        private static Dictionary<string, object> map;
+        Dictionary<string, object> declared = new Dictionary<string, object>();
+
 
         public Interpreter(List<Tokens> t)
         {
@@ -24,9 +29,6 @@ namespace CFPL
         public int Parse()
         {
             object temp;
-            string temp_ident = "";
-            List<string> varList = new List<string>();
-            Dictionary<string, object> declared = new Dictionary<string, object>();
 
             {
                 while(tCounter < tokens.Count)
@@ -44,17 +46,39 @@ namespace CFPL
                             } else
                             {
                                 tCounter++;
-                                varList.Add(tokens[tCounter].Lexeme); 
-
+                                varList.Add(tokens[tCounter].Lexeme);
+                                ParseVar(); 
                             }
-                            break; 
+                            break;
+                        case TokenType.AS:
+                            tCounter++; 
+                            break;
+                        case TokenType.START:
+                            break;
+                        case TokenType.STOP:
+                            break;
                          default:
-                                    break; 
+                            break; 
                     }
-                    tCounter++; 
+                   
                 }
                 return 0; 
             }
+        }
+
+        private void ParseVar()
+        {
+            string temp_ident = "";
+            if(tokens[tCounter].Type == TokenType.IDENTIFIER)
+            {
+                varList.Add(tokens[tCounter].Lexeme);
+                tCounter++;
+                Console.WriteLine("PARSE VAR: " + tokens[tCounter].Lexeme); 
+            } else
+            {
+              Console.WriteLine("Invalid variable declaration");
+            }
+
         }
     }
 }
