@@ -115,11 +115,12 @@ namespace CFPL
         {
             int currLine = tokens[tCounter].Line;
             object temp;
-
+            //to be continued
         }
 
         private void funcOutput()
         {
+            //having tCounter does not make sense have to change it to much easier to understand
             string temp_identOut = "";
             int pos = 0;
             tCounter2 = tCounter;
