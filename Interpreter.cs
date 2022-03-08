@@ -17,24 +17,30 @@ namespace CFPL
 
         private static Dictionary<string, object> map;
         Dictionary<string, object> declared = new Dictionary<string, object>();
+        private int startCount=0;
+        private int stopCount;
+        private bool foundStop;
+        string temp_ident = "";
 
 
         public Interpreter(List<Tokens> t)
         {
             tokens = new List<Tokens>(t);
+            errorMsg = new List<string>();
             tCounter = tCounter2 = whileStartCounter = whileStopCounter = 0;
-            foundStart = false;
+            foundStart = foundStop = false;
             map = new Dictionary<string, object>();
 
         }
         public int Parse()
         {
             object temp;
-
             {
-                while(tCounter < tokens.Count)
+                //Console.WriteLine("Total Count: " + tokens.Count);
+                while (tCounter < tokens.Count)
                 {
-                    Console.WriteLine("LEXEME" + tokens[tCounter + 1].Lexeme);
+                    //Console.WriteLine("LEXEME: " + tokens[tCounter].Lexeme + " Count: " + tCounter);
+
                     switch (tokens[tCounter].Type)
                     {
                         case TokenType.VAR:
@@ -44,6 +50,7 @@ namespace CFPL
                                 Console.WriteLine("Invalid Variable Declaration"); 
                                 // errorMsg.Add(string.Format("Invalid variable declaration. Declaration after START at line {0}.", tokens[tCounter].Line + 1));
                                 tCounter++;
+                                break; 
                             } else
                             {
                                 tCounter++;
@@ -55,30 +62,100 @@ namespace CFPL
                             funcAs(); 
                             break;
                         case TokenType.START:
+                            startCount++;
+                            if (!foundStart)
+                            {
+                                //Console.WriteLine("There is a Start"); 
+                                foundStart = true; 
+                            } else
+                            {
+                                Console.WriteLine("Syntax Error. Incorrect usage of start"); 
+                            }
                             tCounter++; 
                             break;
                         case TokenType.STOP:
+                            stopCount++;
+                            if (!foundStop && foundStart)
+                            {
+                                foundStop = true;
+                                //Console.WriteLine("Inside StopLEXEME: " + tokens[tCounter].Lexeme + " Count: " + tCounter);
+                            } else
+                            {
+                                Console.WriteLine("Syntax error. Incorrect usage of stop"); 
+                            }
                             tCounter++; 
                             break;
                         case TokenType.IDENTIFIER:
+                            tCounter++;
+                            funcIdentifer(); 
+                            
                             break;
+                        case TokenType.OUTPUT:
+                            tCounter++;
+                            funcOutput();
+                            break; 
                         case TokenType.INT_LIT:
                             temp = (int)tokens[tCounter].Literal;
                             tCounter++;
                             break;
                         default:
+                            tCounter++; 
                             break; 
                     }
+                    temp_ident = "";
+                    temp = null; 
                 }
-                return 0; 
+                if (!foundStop)
+                    Console.WriteLine("Program execution failed. It has no STOP");
+                return errorMsg.Count; 
             }
+        }
+
+        private void funcIdentifer()
+        {
+            int currLine = tokens[tCounter].Line;
+            object temp;
+
+        }
+
+        private void funcOutput()
+        {
+            string temp_identOut = "";
+            int pos = 0;
+            tCounter2 = tCounter;
+            if(tokens[tCounter2].Type == TokenType.COLON)
+            {
+                tCounter2++;
+                Console.WriteLine("Output: "); 
+                while(tokens[tCounter2].Type == TokenType.IDENTIFIER) { 
+
+                    switch(tokens[tCounter2].Type)
+                    {
+                        case TokenType.IDENTIFIER:
+                            temp_identOut = tokens[tCounter2].Lexeme;
+                            if (map.ContainsKey(temp_identOut))
+                            {
+                                Console.WriteLine(map[temp_identOut].ToString());
+                                pos++;
+                            } else
+                            {
+                                Console.WriteLine("Variable not initialized"); 
+                                break; 
+                            }
+                            tCounter2++;
+                            break; 
+                        
+                    }
+                    
+                }
+            }
+            
         }
 
         private void funcAs()
         {
             if (tokens[tCounter].Type == TokenType.INT)
             {
-                Console.WriteLine("Inside As");
                 foreach (string x in varList)
                 {
                     if (declared.ContainsKey(x))
@@ -106,7 +183,6 @@ namespace CFPL
 
         private void ParseVar()
         {
-            string temp_ident = "";
             if(tokens[tCounter].Type == TokenType.IDENTIFIER)
             {
                 varList.Add(tokens[tCounter].Lexeme);

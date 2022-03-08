@@ -74,11 +74,12 @@ namespace CFPL
             List<Tokens> t = new List<Tokens>(scanner.Tokens);
             interpreter = new Interpreter(scanner.Tokens);
             errorInterpreter = interpreter.Parse();
+             
             if(errorInterpreter == 0)
             {
-                Console.WriteLine("Parsing Complete"); 
+                richTextBox2.Text = "Compiled Successfully"; 
             }
-
+            
         }
 
         private void button5_Click(object sender, EventArgs e)

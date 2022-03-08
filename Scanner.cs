@@ -96,7 +96,7 @@ namespace CFPL
                         {
                             charCounter++;
                             char b = currString[charCounter];
-                            Console.WriteLine("b"+b);
+                            //Console.WriteLine("b"+b);
                         }
                         else
                         {
@@ -177,7 +177,6 @@ namespace CFPL
                 case "STOP":
                     item = new Tokens(TokenType.STOP, temp, null, line);
                     tokens.Add(item);
-                    Console.WriteLine("STOP");
                     break;
                 case "VAR":
                     item = new Tokens(TokenType.VAR, temp, null, line);
@@ -202,11 +201,10 @@ namespace CFPL
                 case "OUTPUT":
                     item = new Tokens(TokenType.OUTPUT, temp, null, line);
                     tokens.Add(item);
-                    Console.WriteLine("OUTPUT"); 
                     break;
                 default:
                     item = new Tokens(TokenType.IDENTIFIER, temp, null, line);
-                    Console.WriteLine(item.Lexeme); 
+                    //Console.WriteLine(item.Lexeme); 
                     tokens.Add(item);
                     break;
             }
