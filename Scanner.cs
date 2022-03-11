@@ -13,14 +13,14 @@ namespace CFPL
         string[] stringSeparators = new string[] { "\r\n" };
         private static int line;
         private string currString;
-        private int charCounter;
-        private int currStringLength;
+            private int charCounter;
+            private int currStringLength;
         private Tokens item;
         private static List<string> errorMsg;
 
 
         public List<Tokens> Tokens { get {  return tokens; } }
-        public string[] Source { get { return source; } }
+       
 
         public Scanner(string source)
         {
@@ -49,7 +49,14 @@ namespace CFPL
 
         public char getNextChar()
         {
-            return charCounter + 1 < currStringLength ? currString[charCounter + 1] : '|';
+            if (charCounter +  1 < currStringLength)
+            {
+
+                return currString[charCounter + 1];
+            } else
+            {
+                return '|';
+            }
         }
 
         //Process line by line.
@@ -70,7 +77,7 @@ namespace CFPL
                         if (getNextChar() == '=') // == 
                         {
                             string temp = "" + x + getNextChar();
-                            item = new Tokens(TokenType.EQUALS, temp, null, line); //adding the string as a token to the list
+                            item = new Tokens(TokenType.EQUAL, x.ToString(), null, line);
                             tokens.Add(item);
                             charCounter += 2;
                         }
@@ -97,6 +104,7 @@ namespace CFPL
                             charCounter++;
                             char b = currString[charCounter];
                             //Console.WriteLine("b"+b);
+                            CharVal(b);
                         }
                         else
                         {
@@ -106,6 +114,84 @@ namespace CFPL
                         }
                         break;
                     case ' ':
+                        charCounter++;
+                        break;
+                    case '+':
+                        tokens.Add(new Tokens(TokenType.ADD, x.ToString(), null, line));
+                        charCounter++;
+                        break;
+                    case '-':
+                        tokens.Add(new Tokens(TokenType.SUBT, x.ToString(), null, line));
+                        charCounter++;
+                        break;
+                    case '/':
+                        tokens.Add(new Tokens(TokenType.DIV, x.ToString(), null, line));
+                        charCounter++;
+                        break;
+                    case '*':
+                        if (charCounter == 0)
+                        {
+                            while (charCounter != currStringLength) { charCounter++; }
+                        }
+                        else
+                        {
+                            tokens.Add(new Tokens(TokenType.MULT, x.ToString(), null, line));
+                            charCounter++;
+                        }
+                        break;
+                    case '(':
+                        tokens.Add(new Tokens(TokenType.LEFT_PAREN, x.ToString(), null, line));
+                        charCounter++;
+                        break;
+                    case ')':
+                        tokens.Add(new Tokens(TokenType.RIGHT_PAREN, x.ToString(), null, line));
+                        charCounter++;
+                        break;
+                    case '>':
+                        if (getNextChar() == '=')
+                        {
+                            string temp = "" + x + getNextChar();
+                            tokens.Add(new Tokens(TokenType.GREATER_EQUAL, temp, null, line));
+                            charCounter += 2;
+                        }
+                        else
+                        {
+                            tokens.Add(new Tokens(TokenType.GREATER, x.ToString(), null, line));
+                            charCounter++;
+
+                        }
+                        break;
+                    case '<':
+                        if (getNextChar() == '=')
+                        {
+                            string temp = "" + x + getNextChar();
+                            tokens.Add(new Tokens(TokenType.LESSER_EQUAL, temp, null, line));
+                            charCounter += 2;
+                        }
+                        else
+                        {
+                            tokens.Add(new Tokens(TokenType.LESSER, x.ToString(), null, line));
+                            charCounter++;
+                        }
+                        break;
+                    case '%':
+                        tokens.Add(new Tokens(TokenType.MOD, x.ToString(), null, line));
+                        charCounter++;
+                        break;
+                    case '&':
+                        tokens.Add(new Tokens(TokenType.AMPERSAND, x.ToString(), null, line));
+                        charCounter++;
+                        break;
+                    case '#':
+                        tokens.Add(new Tokens(TokenType.SHARP, x.ToString(), null, line));
+                        charCounter++;
+                        break;
+                    case '[':
+                        tokens.Add(new Tokens(TokenType.LEFT_BRACE, x.ToString(), null, line));
+                        charCounter++;
+                        break;
+                    case ']':
+                        tokens.Add(new Tokens(TokenType.RIGHT_BRACE, x.ToString(), null, line));
                         charCounter++;
                         break;
                     default:
@@ -134,6 +220,7 @@ namespace CFPL
             }
         }
 
+    
         private void CharVal(char x)
         {
             int count = 0;
@@ -151,6 +238,12 @@ namespace CFPL
                 charCounter++;
                 count++; 
             }
+            if (count - 2 == 1)
+            {
+                a= TokenType.CHAR_LIT;
+                tokens.Add(new Tokens(a, temp2, char.Parse(temp2), line));
+            }
+            
         }
 
         private bool isChar(char x)
@@ -187,20 +280,64 @@ namespace CFPL
                     tokens.Add(item);
                     break;
                 case "INT":
-                    item = new Tokens(TokenType.INT, temp, null, line);
-                    tokens.Add(item);
+                    if (tokens[tokens.Count - 1].Type == TokenType.AS)
+                        tokens.Add(new Tokens(TokenType.INT, temp, null, line));
+                   
                     break;
                 case "FLOAT":
-                    item = new Tokens(TokenType.FLOAT, temp, null, line);
-                    tokens.Add(item);
+                    if (tokens[tokens.Count - 1].Type == TokenType.AS)
+                        tokens.Add(new Tokens(TokenType.INT, temp, null, line));
+                   
+    
                     break;
                 case "BOOL":
                     item = new Tokens(TokenType.BOOL, temp, null, line);
                     tokens.Add(item);
                     break;
+                case "INPUT":
+                    tokens.Add(new Tokens(TokenType.INPUT, temp, null, line));
+                    break;
                 case "OUTPUT":
                     item = new Tokens(TokenType.OUTPUT, temp, null, line);
                     tokens.Add(item);
+                    break;
+                case "CHAR":
+                    item = new Tokens(TokenType.CHAR, temp, null, line);
+                    tokens.Add(item);
+                
+                    break;
+                case "IF":
+
+                    item = new Tokens(TokenType.IF, temp, null, line);
+                    tokens.Add(item);
+
+                    break;
+                case "ELSE":
+                    item = new Tokens(TokenType.ELSE, temp, null, line);
+                    tokens.Add(item);
+                    break;
+                case "ELIF":
+                    item = new Tokens(TokenType.ELIF, temp, null, line);
+                    tokens.Add(item);
+
+                    break;
+                case "AND":
+                    tokens.Add(new Tokens(TokenType.AND, temp, null, line));
+                    break;
+                case "OR":
+                    tokens.Add(new Tokens(TokenType.OR, temp, null, line));
+                    break;
+                case "NOT":
+                    tokens.Add(new Tokens(TokenType.NOT, temp, null, line));
+                    break;
+                case "TRUE":
+                    tokens.Add(new Tokens(TokenType.TRUE, temp, null, line));
+                    break;
+                case "WHILE":
+                    tokens.Add(new Tokens(TokenType.WHILE, temp, null, line));
+                    break;
+                case "FALSE":
+                    tokens.Add(new Tokens(TokenType.FALSE, temp, null, line));
                     break;
                 default:
                     item = new Tokens(TokenType.IDENTIFIER, temp, null, line);
