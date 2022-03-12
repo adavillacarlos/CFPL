@@ -15,7 +15,7 @@ namespace CFPL
 
 
 
-        //Esacape character
+        //Escape character
         SHARP, AMPERSAND, QUOTE,//# & "
 
         //Operation
@@ -38,6 +38,7 @@ namespace CFPL
         VAR, AS, OUTPUT, IF, ELSE, ELIF,
         WHILE, START, STOP, INT,
         BOOL, FLOAT, CHAR,
-        AND, OR, NOT, INPUT, TRUE, FALSE
+        AND, OR, NOT, INPUT, TRUE, FALSE,
+        D_QUOTE 
     }
 }
