@@ -16,7 +16,7 @@ namespace CFPL
 
 
         //Escape character
-        SHARP, AMPERSAND, QUOTE,//# & "
+        SHARP, AMPERSAND, D_QUOTE,//# & "
 
         //Operation
         MULT, ADD, SUBT, DIV, MOD, //* + - / %
@@ -39,6 +39,6 @@ namespace CFPL
         WHILE, START, STOP, INT,
         BOOL, FLOAT, CHAR,
         AND, OR, NOT, INPUT, TRUE, FALSE,
-        D_QUOTE 
+         
     }
 }

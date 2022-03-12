@@ -105,11 +105,11 @@ namespace CFPL
                             charCounter++;
                             char b = currString[charCounter];
                             //Console.WriteLine("b"+b);
-                            CharVal(b);
+                            BooleanVal(b);
                         }
                         else
                         {
-                            item = new Tokens(TokenType.QUOTE, x.ToString(), null, line);
+                            item = new Tokens(TokenType.D_QUOTE, x.ToString(), null, line);
                             tokens.Add(item);
                             charCounter++;
                         }
@@ -221,7 +221,11 @@ namespace CFPL
             }
         }
 
-    
+        private void BooleanVal(char b)
+        {
+           //Please Add 
+        }
+
         private void CharVal(char x)
         {
             int count = 0;
