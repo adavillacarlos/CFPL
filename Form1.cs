@@ -75,17 +75,22 @@ namespace CFPL
             interpreter = new Interpreter(scanner.Tokens);
             errorInterpreter = interpreter.Parse();
 
-
             if (errorInterpreter == 0)
             {
-                richTextBox2.Text = "Compiled Successfully"; 
+                richTextBox2.Text = "Compiled Successfully";
+                richTextBox3.Text = "";
+                foreach (string a in interpreter.OutputMessages)
+                {
+                    richTextBox3.Text += a;
+                }
             } else
             {
                 richTextBox2.Text = ""; 
-                foreach (string a in interpreter.ErrorMsg)
+                foreach (string a in interpreter.ErrorMessages)
                 {
                     richTextBox2.Text += a + "\n";
                 }
+                
             }
             
         }

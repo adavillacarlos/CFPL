@@ -212,7 +212,7 @@ namespace CFPL
                             CharVal(x); 
                         } else
                         {
-                            //errorMsg.Add(string.Format("Encountered unsupported character \"{0}\" at line {1}.\n", x, line + 1));
+                            //errorMessages.Add(string.Format("Encountered unsupported character \"{0}\" at line {1}.\n", x, line + 1));
                             charCounter++; 
                         }
                         break; 
