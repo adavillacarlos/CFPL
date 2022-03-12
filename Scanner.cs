@@ -22,6 +22,7 @@ namespace CFPL
         public List<Tokens> Tokens { get {  return tokens; } }
         public string[] Source { get { return source; } }
 
+        public List<string> ErrorMsg { get { return errorMsg; } }
         public Scanner(string source)
         {
             tokens = new List<Tokens>();
