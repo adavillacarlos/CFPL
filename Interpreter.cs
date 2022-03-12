@@ -54,6 +54,8 @@ namespace CFPL
                                 tCounter++;
                                 break; 
                             } else
+
+
                             {
                                 tCounter++;
                                 ParseDeclaration();
