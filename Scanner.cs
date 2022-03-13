@@ -50,14 +50,7 @@ namespace CFPL
 
         public char getNextChar()
         {
-            if (charCounter +  1 < currStringLength)
-            {
-
-                return currString[charCounter + 1];
-            } else
-            {
-                return '|';
-            }
+            return charCounter +  1 < currStringLength ? currString[charCounter + 1] : '|';
         }
 
         //Process line by line.

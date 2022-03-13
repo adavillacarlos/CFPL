@@ -12,131 +12,131 @@ namespace CFPL
         private static int tokenCounter, tokenCounter2;
         private static bool foundStart;
         private static List<string> errorMessages;
-        private static List<string> outputMessages; 
+        private static List<string> outputMessages;
 
         List<string> varDeclareList = new List<string>();
 
         private static Dictionary<string, object> outputMap;
         Dictionary<string, object> declaredVariables = new Dictionary<string, object>();
-        private int startCount=0;
+        private int startCount = 0;
         private int stopCount;
         private bool foundStop;
         string temp_ident = "";
         string msg = "";
-        bool error; 
+        bool error;
 
         public Interpreter(List<Tokens> t)
         {
             tokens = new List<Tokens>(t);
             errorMessages = new List<string>();
             outputMessages = new List<string>();
-            tokenCounter = tokenCounter2 = 0; 
+            tokenCounter = tokenCounter2 = 0;
             foundStart = foundStop = false;
             outputMap = new Dictionary<string, object>();
-            error = false; 
+            error = false;
         }
 
         public List<string> ErrorMessages { get { return errorMessages; } }
-        public List<string> OutputMessages { get { return outputMessages;  } }
+        public List<string> OutputMessages { get { return outputMessages; } }
 
         public int Parse()
         {
             object temp;
+            while (tokenCounter < tokens.Count) //counts it token by token
             {
-                while (tokenCounter < tokens.Count) //counts it token by token
+                //Console.WriteLine("Lexeme: " + tokens[tokenCounter].Lexeme); 
+                switch (tokens[tokenCounter].Type)
                 {
-                    //Console.WriteLine("Lexeme: " + tokens[tokenCounter].Lexeme); 
-                    switch (tokens[tokenCounter].Type) 
-                    {
-                        case TokenType.VAR:
-                            //error messages does not work NGANO MAN KAIRIT HA
-                            if (foundStart)
-                            {
-                                msg = "Invalid variable declaration. Declaration after START at line " + (tokens[tokenCounter].Line + 1);
-                                Console.WriteLine(msg); 
-                                errorMessages.Add(msg);
-                                tokenCounter++;
-                                break; 
-                            } else
-                            {
-                                tokenCounter++; //iterate to get the variable name
-                                ParseDeclaration();
-                            }
-                            break;
-                         case TokenType.AS:
-                            tokenCounter++;
-                            ParseAs(); 
-                            break; 
-                        case TokenType.START: //ERROR DETECTING NOT WORKING HUHU
-                            startCount++;
-                            if (!foundStart)
-                            {
-                                foundStart = true; 
-                            } else
-                            {
-                                msg = "Syntax Error. Incorrect usage of start at line " + (tokens[tokenCounter].Line + 1);
-                                errorMessages.Add(msg);
-                                Console.WriteLine(msg); 
-                            }
-                            tokenCounter++; 
-                            break;
-                        case TokenType.STOP:
-                            stopCount++;
-                            //this doesn't really work well yet, need fixing :( 
-                            if (!foundStop && foundStart)
-                            {
-                               
-                                foundStop = true;
-                            } else
-                            {
-                                msg = "Syntax Error. Incorrect usage of stop at line " + (tokens[tokenCounter].Line + 1);
-                                errorMessages.Add(msg);
-                                Console.WriteLine(msg); 
-                            }
-                            tokenCounter++; 
-                            break;
-                        case TokenType.IDENTIFIER:
-                            //should happen after the var
-                            //happens after variable declaration
-                            temp_ident = tokens[tokenCounter++].Lexeme;
-                            ParseIdentifier(temp_ident); 
-                            break;
-                        case TokenType.OUTPUT:
-                            tokenCounter++;
-                            ParseOutput();
-                            break; 
-                        case TokenType.INT_LIT:
-                            temp = (int)tokens[tokenCounter].Literal; //have to check if everything is valid as well
+                    case TokenType.VAR:
+                        //error messages does not work NGANO MAN KAIRIT HA
+                        if (foundStart)
+                        {
+                            msg = "Invalid variable declaration. Declaration after START at line " + (tokens[tokenCounter].Line + 1);
+                            Console.WriteLine(msg);
+                            errorMessages.Add(msg);
                             tokenCounter++;
                             break;
-                        case TokenType.CHAR_LIT:
-                            temp = Convert.ToChar(tokens[tokenCounter].Literal);
-                            tokenCounter++;
-                            break;
-                        case TokenType.BOOL_LIT:
-                            temp = (string)tokens[tokenCounter].Literal;
-                            tokenCounter++;
-                            break;
-                        case TokenType.FLOAT_LIT:
-                            temp = (double)tokens[tokenCounter].Literal;
-                            tokenCounter++; 
-                            break; 
-                        default:
-                            tokenCounter++; 
-                            break; 
-                    }
-                    temp_ident = "";
-                    temp = null; 
+                        }
+                        else
+                        {
+                            tokenCounter++; //iterate to get the variable name
+                            ParseDeclaration();
+                        }
+                        break;
+                    case TokenType.AS:
+                        tokenCounter++;
+                        ParseAs();
+                        break;
+                    case TokenType.START: //ERROR DETECTING NOT WORKING HUHU
+                        startCount++;
+                        if (!foundStart)
+                        {
+                            foundStart = true;
+                        }
+                        else
+                        {
+                            msg = "Syntax Error. Incorrect usage of start at line " + (tokens[tokenCounter].Line + 1);
+                            errorMessages.Add(msg);
+                            Console.WriteLine(msg);
+                        }
+                        tokenCounter++;
+                        break;
+                    case TokenType.STOP:
+                        stopCount++;
+                        //this doesn't really work well yet, need fixing :( 
+                        if (!foundStop && foundStart)
+                        {
+                            foundStop = true;
+                        }
+                        else
+                        {
+                            msg = "Syntax Error. Incorrect usage of stop at line " + (tokens[tokenCounter].Line + 1);
+                            errorMessages.Add(msg);
+                            Console.WriteLine(msg);
+                        }
+                        tokenCounter++;
+                        break;
+                    case TokenType.IDENTIFIER:
+                        //should happen after the var
+                        //happens after variable declaration
+                        temp_ident = tokens[tokenCounter++].Lexeme;
+                        ParseIdentifier(temp_ident);
+                        break;
+                    case TokenType.OUTPUT:
+                        tokenCounter++;
+                        ParseOutput();
+                        break;
+                    case TokenType.INT_LIT:
+                        temp = (int)tokens[tokenCounter].Literal; //have to check if everything is valid as well
+                        tokenCounter++;
+                        break;
+                    case TokenType.CHAR_LIT:
+                        temp = Convert.ToChar(tokens[tokenCounter].Literal);
+                        tokenCounter++;
+                        break;
+                    case TokenType.BOOL_LIT:
+                        temp = (string)tokens[tokenCounter].Literal;
+                        tokenCounter++;
+                        break;
+                    case TokenType.FLOAT_LIT:
+                        temp = (double)tokens[tokenCounter].Literal;
+                        tokenCounter++;
+                        break;
+                    default:
+                        tokenCounter++;
+                        break;
                 }
-                if (!foundStop)
-                {
-                    msg = "Program execution failed."; 
-                    errorMessages.Add(msg);
-                    Console.WriteLine(msg); 
-                }
-                    
-                return errorMessages.Count; 
+                temp_ident = "";
+                temp = null;
             }
+            if (!foundStop)
+            {
+                msg = "Program execution failed.";
+                errorMessages.Add(msg);
+                Console.WriteLine(msg);
+            }
+
+            return errorMessages.Count;
         }
 
         //Mostly used if identifier is declaredVariables inside the START keyword
@@ -149,15 +149,15 @@ namespace CFPL
 
             int currentLine = tokens[tokenCounter].Line;
             object temp;
-            if(tokens[tokenCounter].Type == TokenType.EQUALS) 
+            if (tokens[tokenCounter].Type == TokenType.EQUALS)
             {
                 tokenCounter++;
                 tokenCounter2 = tokenCounter;
-                List <string> expression= new List<string>(); 
+                List<string> expression = new List<string>();
                 string a = "";
                 if (outputMap.ContainsKey(identifier)) //if there is an variable inside the final outputMap 
                 {
-                    switch (tokens[tokenCounter].Type )
+                    switch (tokens[tokenCounter].Type)
                     {
                         case TokenType.INT_LIT when outputMap[identifier].GetType() == typeof(Int32):
                             temp = (int)tokens[tokenCounter].Literal;
@@ -177,57 +177,59 @@ namespace CFPL
                             outputMap[identifier] = temp;
                             break;
                     }
-                } 
+                }
                 else
                 {
                     msg = "Syntax Error. Variable Assignation failed at line " + (tokens[tokenCounter].Line + 1);
                     errorMessages.Add(msg);
-                    Console.WriteLine(msg); 
+                    Console.WriteLine(msg);
                 }
-                
+
             }
         }
 
         private void ParseOutput()
         {
             string temp_identOut = "";
-            string output = ""; 
+            string output = "";
             tokenCounter2 = tokenCounter;
-            if (tokens[tokenCounter2].Type == TokenType.COLON) 
+            if (tokens[tokenCounter2].Type == TokenType.COLON)
             {
                 tokenCounter2++;
-                Console.WriteLine("Output: "); 
-                while(tokens[tokenCounter2].Type == TokenType.IDENTIFIER) {
-                    switch(tokens[tokenCounter2].Type)
+                Console.WriteLine("Output: ");
+                while (tokens[tokenCounter2].Type == TokenType.IDENTIFIER)
+                {
+                    switch (tokens[tokenCounter2].Type)
                     {
                         case TokenType.IDENTIFIER:
                             temp_identOut = tokens[tokenCounter2].Lexeme;
-                            Console.WriteLine(temp_identOut); 
+                            Console.WriteLine(temp_identOut);
                             if (outputMap.ContainsKey(temp_identOut)) //checks if the identifier is inside the final outputMap
                             {
-                                output = outputMap[temp_identOut].ToString(); 
+                                output = outputMap[temp_identOut].ToString();
                                 Console.WriteLine(output);
                                 outputMessages.Add(output);  //add it to the messages needed to be outputted
-                            } else
+                            }
+                            else
                             {
-                                msg = "Variable not initialized at line "  + (tokens[tokenCounter].Line + 1);
+                                msg = "Variable not initialized at line " + (tokens[tokenCounter].Line + 1);
                                 errorMessages.Add(msg);
                                 Console.WriteLine(msg);
-                                error = true; 
+                                error = true;
                             }
                             tokenCounter2++;
-                            break; 
+                            break;
                     }
                     if (error)
                     {
-                        error = false; 
+                        error = false;
                         break;
                     }
-                         
-                    
+
+
                 }
             }
-            
+
         }
 
         //Checks the token type after the keyword AS  
@@ -251,7 +253,7 @@ namespace CFPL
                             {
                                 msg = "Type Error at Line: " + tokens[tokenCounter].Line;
                                 errorMessages.Add(msg);
-                                Console.WriteLine(msg); 
+                                Console.WriteLine(msg);
                             }
                         }
                         else //if not declaredVariables just store 0 temporarily
@@ -267,18 +269,18 @@ namespace CFPL
                     for (int i = 0; i < varDeclareList.Count; i++)
                     {
                         string x = varDeclareList[i];
-                        if (declaredVariables.ContainsKey(x)) 
+                        if (declaredVariables.ContainsKey(x))
                         {
                             if (declaredVariables[x].GetType() == typeof(Char))
                             {
                                 outputMap.Add(x, (char)declaredVariables[x]);
-                                Console.WriteLine(declaredVariables[x]); 
+                                Console.WriteLine(declaredVariables[x]);
                             }
                             else
                             {
                                 msg = "Type Error at Line: " + tokens[tokenCounter].Line;
                                 errorMessages.Add(msg);
-                                Console.WriteLine(msg); 
+                                Console.WriteLine(msg);
                             }
                         }
                         else
@@ -287,13 +289,13 @@ namespace CFPL
                         }
                     }
                     tokenCounter++;
-                    varDeclareList.Clear(); 
+                    varDeclareList.Clear();
                     break;
                 case TokenType.BOOL: //Not Working
                     for (int i = 0; i < varDeclareList.Count; i++)
                     {
                         string x = varDeclareList[i];
-                        Console.WriteLine("VAR: " + x); 
+                        Console.WriteLine("VAR: " + x);
                         if (declaredVariables.ContainsKey(x))
                         {
                             if (declaredVariables[x].GetType() == typeof(string))
@@ -305,7 +307,7 @@ namespace CFPL
                             {
                                 msg = "Type Error at Line: " + tokens[tokenCounter].Line;
                                 errorMessages.Add(msg);
-                                Console.WriteLine(msg); 
+                                Console.WriteLine(msg);
                             }
                         }
                         else
@@ -317,15 +319,15 @@ namespace CFPL
                     varDeclareList.Clear();
                     break;
                 case TokenType.FLOAT:
-                    for (int i = 0; i < varDeclareList.Count; i++) 
+                    for (int i = 0; i < varDeclareList.Count; i++)
                     {
                         string x = varDeclareList[i];
-                        
-                        if (declaredVariables.ContainsKey(x)) 
+
+                        if (declaredVariables.ContainsKey(x))
                         {
                             if (declaredVariables[x].GetType() == typeof(double))
                             {
-                                outputMap.Add(x, (double)declaredVariables[x]); 
+                                outputMap.Add(x, (double)declaredVariables[x]);
                             }
                             else
                             {
@@ -345,50 +347,49 @@ namespace CFPL
                     break;
                 default:
                     msg = "Syntax Error at line " + ((tokens[tokenCounter].Line + 1));
-                    Console.WriteLine(msg); 
+                    Console.WriteLine(msg);
                     errorMessages.Add(msg);
-                    break; 
+                    break;
             }
         }
 
         //Get the variable name declaredVariables and save it to the declaredVariables dictionary
-        
-       
-        
+
+
+
         private void ParseDeclaration()
         {
-            if(tokens[tokenCounter].Type == TokenType.IDENTIFIER) 
+            if (tokens[tokenCounter].Type == TokenType.IDENTIFIER)
             {
                 varDeclareList.Add(tokens[tokenCounter].Lexeme); //Add the variable to the variable List
                 //temp_ident= tokens[tokenCounter].Lexeme; //get the variable name 
                 tokenCounter++;
-                ParseEqual(); 
+                ParseEqual();
                 if (tokens[tokenCounter].Type == TokenType.COMMA)
                 {
-                    ParseCommas(); 
+                    ParseCommas();
                 }
-            } 
+            }
             else
             {
                 msg = "Invalid variable declaration. After VAR is not an identifier at line " + (tokens[tokenCounter].Line + 1);
                 errorMessages.Add(msg);
-                Console.WriteLine(msg); 
+                Console.WriteLine(msg);
             }
 
         }
 
         private void ParseCommas()
         {
-            while(tokens[tokenCounter].Type == TokenType.COMMA)
+            while (tokens[tokenCounter].Type == TokenType.COMMA)
             {
                 tokenCounter++;
                 if (tokens[tokenCounter].Type == TokenType.IDENTIFIER)
                 {
-                    Console.WriteLine("Added to Var Declared List: " + tokens[tokenCounter].Lexeme); 
                     varDeclareList.Add(tokens[tokenCounter].Lexeme); //Add the variable to the variable List
                                                                      //temp_ident= tokens[tokenCounter].Lexeme; //get the variable name 
                     tokenCounter++;
-                    ParseEqual(); 
+                    ParseEqual();
                 }
                 else
                 {
@@ -396,7 +397,7 @@ namespace CFPL
                     errorMessages.Add(msg);
                     Console.WriteLine(msg);
                 }
-                if(tokens[tokenCounter].Type == TokenType.IDENTIFIER)
+                if (tokens[tokenCounter].Type == TokenType.IDENTIFIER)
                 {
                     msg = "Invalid Variable declaration at line " + (tokens[tokenCounter].Line + 1);
                     errorMessages.Add(msg);
