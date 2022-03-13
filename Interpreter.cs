@@ -17,7 +17,7 @@ namespace CFPL
         List<string> varDeclareList = new List<string>();
 
         private static Dictionary<string, object> outputMap;
-        Dictionary<string, object> declared = new Dictionary<string, object>();
+        Dictionary<string, object> declaredVariables = new Dictionary<string, object>();
         private int startCount=0;
         private int stopCount;
         private bool foundStop;
@@ -139,7 +139,7 @@ namespace CFPL
             }
         }
 
-        //Mostly used if identifier is declared inside the START keyword
+        //Mostly used if identifier is declaredVariables inside the START keyword
         private void ParseIdentifier(string identifier)
         {
             /*
@@ -238,14 +238,14 @@ namespace CFPL
             switch (tokens[tokenCounter].Type)
             {
                 case TokenType.INT:
-                    for (int i = 0; i < varDeclareList.Count; i++) //go through the variable declared
+                    for (int i = 0; i < varDeclareList.Count; i++) //go through the variable declaredVariables
                     {
                         string x = varDeclareList[i];
-                        if (declared.ContainsKey(x)) //checks if it is being declared together with its value
+                        if (declaredVariables.ContainsKey(x)) //checks if it is being declaredVariables together with its value
                         {
-                            if (declared[x].GetType() == typeof(int))
+                            if (declaredVariables[x].GetType() == typeof(int))
                             {
-                                outputMap.Add(x, (int)declared[x]); //add it to the outputMap dictionary serves as final list for output
+                                outputMap.Add(x, (int)declaredVariables[x]); //add it to the outputMap dictionary serves as final list for output
                             }
                             else
                             {
@@ -254,7 +254,7 @@ namespace CFPL
                                 Console.WriteLine(msg); 
                             }
                         }
-                        else //if not declared just store 0 temporarily
+                        else //if not declaredVariables just store 0 temporarily
                         {
                             outputMap.Add(x, 0);
                         }
@@ -267,12 +267,12 @@ namespace CFPL
                     for (int i = 0; i < varDeclareList.Count; i++)
                     {
                         string x = varDeclareList[i];
-                        if (declared.ContainsKey(x)) 
+                        if (declaredVariables.ContainsKey(x)) 
                         {
-                            if (declared[x].GetType() == typeof(Char))
+                            if (declaredVariables[x].GetType() == typeof(Char))
                             {
-                                outputMap.Add(x, (char)declared[x]);
-                                Console.WriteLine(declared[x]); 
+                                outputMap.Add(x, (char)declaredVariables[x]);
+                                Console.WriteLine(declaredVariables[x]); 
                             }
                             else
                             {
@@ -294,12 +294,12 @@ namespace CFPL
                     {
                         string x = varDeclareList[i];
                         Console.WriteLine("VAR: " + x); 
-                        if (declared.ContainsKey(x))
+                        if (declaredVariables.ContainsKey(x))
                         {
-                            if (declared[x].GetType() == typeof(string))
+                            if (declaredVariables[x].GetType() == typeof(string))
                             {
-                                outputMap.Add(x, (string)declared[x]);
-                                Console.WriteLine(declared[x]);
+                                outputMap.Add(x, (string)declaredVariables[x]);
+                                Console.WriteLine(declaredVariables[x]);
                             }
                             else
                             {
@@ -321,11 +321,11 @@ namespace CFPL
                     {
                         string x = varDeclareList[i];
                         
-                        if (declared.ContainsKey(x)) 
+                        if (declaredVariables.ContainsKey(x)) 
                         {
-                            if (declared[x].GetType() == typeof(double))
+                            if (declaredVariables[x].GetType() == typeof(double))
                             {
-                                outputMap.Add(x, (double)declared[x]); 
+                                outputMap.Add(x, (double)declaredVariables[x]); 
                             }
                             else
                             {
@@ -351,7 +351,7 @@ namespace CFPL
             }
         }
 
-        //Get the variable name declared and save it to the declared dictionary
+        //Get the variable name declaredVariables and save it to the declaredVariables dictionary
         
        
         
@@ -407,7 +407,7 @@ namespace CFPL
 
         private void ParseEqual()
         {
-            if (tokens[tokenCounter].Type == TokenType.EQUALS) //if the value is going to get declared as well
+            if (tokens[tokenCounter].Type == TokenType.EQUALS) //if the value is going to get declaredVariables as well
             {
                 temp_ident = tokens[tokenCounter - 1].Lexeme;
                 tokenCounter++;
@@ -415,20 +415,20 @@ namespace CFPL
                 {
                     case TokenType.INT_LIT:
                         //save the variable together with its value 
-                        declared.Add(temp_ident, (int)tokens[tokenCounter].Literal);
+                        declaredVariables.Add(temp_ident, (int)tokens[tokenCounter].Literal);
                         tokenCounter++;
                         break;
                     case TokenType.CHAR_LIT:
-                        declared.Add(temp_ident, Convert.ToChar(tokens[tokenCounter].Literal));
+                        declaredVariables.Add(temp_ident, Convert.ToChar(tokens[tokenCounter].Literal));
                         tokenCounter++;
                         break;
                     case TokenType.BOOL_LIT: //Not yet working have to fix the declaration of TRUE and FALSE 
-                        declared.Add(temp_ident, (string)(tokens[tokenCounter].Literal));
+                        declaredVariables.Add(temp_ident, (string)(tokens[tokenCounter].Literal));
                         tokenCounter++;
                         break;
                     case TokenType.FLOAT_LIT:
                         //save the variable together with its value 
-                        declared.Add(temp_ident, (double)tokens[tokenCounter].Literal);
+                        declaredVariables.Add(temp_ident, (double)tokens[tokenCounter].Literal);
                         tokenCounter++;
                         break;
                     default:
