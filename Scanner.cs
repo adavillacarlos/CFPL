@@ -97,7 +97,6 @@ namespace CFPL
                         {
                             charCounter++;
                             char b = currString[charCounter];
-                            //Console.WriteLine("b"+b);
                             BooleanVal(b);
                         }
                         else
@@ -216,9 +215,44 @@ namespace CFPL
             }
         }
 
-        private void BooleanVal(char b)
+        private void BooleanVal(char a)
         {
-           //Please Add 
+            var t = TokenType.BOOL_LIT;
+            string temp = "";
+            while (isBoolean(a))
+            {
+                if (a == ' ')
+                {
+                    a = getNextChar();
+                    charCounter++;
+                }
+                else
+                {
+                    temp += a;
+                    a = getNextChar();
+                    charCounter++;
+                }
+            }
+
+
+            if (temp == "TRUE")
+            {
+                tokens.Add(new Tokens(t, temp, Convert.ToString("TRUE"), line));
+            }
+            else if (temp == "FALSE")
+            {
+                tokens.Add(new Tokens(t, temp, Convert.ToString("FALSE"), line));
+            }
+            else
+            {
+                errorMsg.Add(string.Format("Invalid value at line {0}.", line + 1));
+            }
+
+        }
+
+        private bool isBoolean(char b)
+        {
+            return ((b >= 'A' && b <= 'Z'));
         }
 
         private void CharVal(char x)

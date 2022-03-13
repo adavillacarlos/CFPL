@@ -81,7 +81,14 @@ namespace CFPL
                 richTextBox3.Text = "";
                 foreach (string a in interpreter.OutputMessages)
                 {
-                    richTextBox3.Text += a;
+                    if (a == "#")
+                    {
+                        richTextBox2.Text += "\n"; 
+                    } else
+                    {
+                        richTextBox3.Text += a;
+                    }
+                    
                 }
             } else
             {

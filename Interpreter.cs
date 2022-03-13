@@ -44,14 +44,13 @@ namespace CFPL
             object temp;
             while (tokenCounter < tokens.Count) //counts it token by token
             {
-                //Console.WriteLine("Lexeme: " + tokens[tokenCounter].Lexeme); 
                 switch (tokens[tokenCounter].Type)
                 {
                     case TokenType.VAR:
                         //error messages does not work NGANO MAN KAIRIT HA
                         if (foundStart)
                         {
-                            msg = "Invalid variable declaration. Declaration after START at line " + (tokens[tokenCounter].Line + 1);
+                            msg = "Invalid variable declaration due to START at line " + (tokens[tokenCounter].Line + 1);
                             Console.WriteLine(msg);
                             errorMessages.Add(msg);
                             tokenCounter++;
@@ -75,7 +74,7 @@ namespace CFPL
                         }
                         else
                         {
-                            msg = "Syntax Error. Incorrect usage of start at line " + (tokens[tokenCounter].Line + 1);
+                            msg = "Syntax Error. Incorrect usage of START at line " + (tokens[tokenCounter].Line + 1);
                             errorMessages.Add(msg);
                             Console.WriteLine(msg);
                         }
@@ -90,7 +89,7 @@ namespace CFPL
                         }
                         else
                         {
-                            msg = "Syntax Error. Incorrect usage of stop at line " + (tokens[tokenCounter].Line + 1);
+                            msg = "Syntax Error. Incorrect usage of STOP at line " + (tokens[tokenCounter].Line + 1);
                             errorMessages.Add(msg);
                             Console.WriteLine(msg);
                         }
@@ -146,7 +145,6 @@ namespace CFPL
              *   outputMap.Select(i => $"{i.Key}").ToList().ForEach(Console.WriteLine);
              *    Console.WriteLine(tokens[tokenCounter].Lexeme);
              */
-
             int currentLine = tokens[tokenCounter].Line;
             object temp;
             if (tokens[tokenCounter].Type == TokenType.EQUALS)
@@ -155,8 +153,11 @@ namespace CFPL
                 tokenCounter2 = tokenCounter;
                 List<string> expression = new List<string>();
                 string a = "";
+
                 if (outputMap.ContainsKey(identifier)) //if there is an variable inside the final outputMap 
                 {
+                    //while relations 
+
                     switch (tokens[tokenCounter].Type)
                     {
                         case TokenType.INT_LIT when outputMap[identifier].GetType() == typeof(Int32):
@@ -196,12 +197,12 @@ namespace CFPL
             if (tokens[tokenCounter2].Type == TokenType.COLON)
             {
                 tokenCounter2++;
-                Console.WriteLine("Output: ");
-                while (tokens[tokenCounter2].Type == TokenType.IDENTIFIER)
+                while (tokens[tokenCounter2].Type == TokenType.IDENTIFIER || tokens[tokenCounter2].Type == TokenType.D_QUOTE)
                 {
                     switch (tokens[tokenCounter2].Type)
                     {
                         case TokenType.IDENTIFIER:
+                            Console.WriteLine("iDENTIFIER"); 
                             temp_identOut = tokens[tokenCounter2].Lexeme;
                             Console.WriteLine(temp_identOut);
                             if (outputMap.ContainsKey(temp_identOut)) //checks if the identifier is inside the final outputMap
@@ -219,14 +220,32 @@ namespace CFPL
                             }
                             tokenCounter2++;
                             break;
+                        case TokenType.D_QUOTE:
+                            Console.WriteLine("Quotes"); 
+                            tokenCounter2++;
+                            //?? 
+                                outputMessages.Add(tokens[tokenCounter2].Lexeme);
+                                tokenCounter2++; 
+
+                            if(tokens[tokenCounter2].Type == TokenType.D_QUOTE)
+                            {
+                                tokenCounter2++; 
+                            } else
+                            {
+                                msg = "Missing double quotes at line " + (tokens[tokenCounter].Line + 1);
+                                errorMessages.Add(msg);
+                                Console.WriteLine(msg);
+                                error = true;
+                            }
+                            break;
+                        default:
+                            break; 
                     }
                     if (error)
                     {
                         error = false;
                         break;
                     }
-
-
                 }
             }
 
@@ -291,7 +310,7 @@ namespace CFPL
                     tokenCounter++;
                     varDeclareList.Clear();
                     break;
-                case TokenType.BOOL: //Not Working
+                case TokenType.BOOL:
                     for (int i = 0; i < varDeclareList.Count; i++)
                     {
                         string x = varDeclareList[i];
@@ -354,9 +373,6 @@ namespace CFPL
         }
 
         //Get the variable name declaredVariables and save it to the declaredVariables dictionary
-
-
-
         private void ParseDeclaration()
         {
             if (tokens[tokenCounter].Type == TokenType.IDENTIFIER)
