@@ -17,7 +17,7 @@ namespace CFPL
             private int currStringLength;
         private Tokens item;
         private static List<string> errorMsg;
-
+        string msg = ""; 
 
         public List<Tokens> Tokens { get {  return tokens; } }
        
@@ -212,7 +212,9 @@ namespace CFPL
                             CharVal(x); 
                         } else
                         {
-                            //errorMessages.Add(string.Format("Encountered unsupported character \"{0}\" at line {1}.\n", x, line + 1));
+                            msg = "Encountered unsupported character" +  x + " at line " + line + 1;  
+                            errorMsg.Add(msg);
+                            Console.WriteLine(msg); 
                             charCounter++; 
                         }
                         break; 
@@ -256,7 +258,7 @@ namespace CFPL
             return(x == '\'' || (x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z') || x == '_' || (x >= '0' && x <= '9'));
         }
 
-        //Checking if the string is a variable keyword or not
+        //Checking if the string is t variable keyword or not
         private void isIdentifier(char x)
         {
             string temp = ""; 
@@ -287,13 +289,23 @@ namespace CFPL
                 case "INT":
                     if (tokens[tokens.Count - 1].Type == TokenType.AS)
                         tokens.Add(new Tokens(TokenType.INT, temp, null, line));
-                   
+                   else
+                    {
+                        msg = "Invalid usage of reserved word INT at line " + line + 1;
+                        errorMsg.Add(msg);
+                        Console.WriteLine(msg);
+                    }
                     break;
                 case "FLOAT":
                     if (tokens[tokens.Count - 1].Type == TokenType.AS)
-                        tokens.Add(new Tokens(TokenType.INT, temp, null, line));
-                   
-    
+                        tokens.Add(new Tokens(TokenType.FLOAT, temp, null, line));
+                    else
+                    {
+                        msg = "Invalid usage of reserved word FLOAT at line " + line + 1;
+                        errorMsg.Add(msg);
+                        Console.WriteLine(msg);
+                    }
+                
                     break;
                 case "BOOL":
                     item = new Tokens(TokenType.BOOL, temp, null, line);
@@ -307,9 +319,16 @@ namespace CFPL
                     tokens.Add(item);
                     break;
                 case "CHAR":
-                    item = new Tokens(TokenType.CHAR, temp, null, line);
-                    tokens.Add(item);
-                
+                    if(tokens[tokens.Count - 1].Type == TokenType.AS)
+                    {
+                        item = new Tokens(TokenType.CHAR, temp, null, line);
+                        tokens.Add(item);
+                    } else
+                    {
+                        msg = "Invalid usage of reserved word CHAR at line " + line + 1;
+                        errorMsg.Add(msg);
+                        Console.WriteLine(msg);
+                    }
                     break;
                 case "IF":
 
@@ -359,37 +378,37 @@ namespace CFPL
         }
 
         //Check if Float Or Integer
-        private void isType(char x) 
+        private void isType(char a) 
         {
-            var a = TokenType.INT_LIT;
+            var t = TokenType.INT_LIT;
             string temp = "";
-            //Checking if everything is a number
-            while (isDigit(x))
+            //Checking if everything is t number
+            while (isDigit(a))
             {
-                temp += x;
-                x = getNextChar();
+                temp += a;
+                a = getNextChar();
                 charCounter++; 
             }
-            if(x == '.')
+            if(a == '.')
             {
-                temp += x;
-                a = TokenType.FLOAT_LIT;
-                x = getNextChar();
+                temp += a;
+                t = TokenType.FLOAT_LIT;
+                a = getNextChar();
                 charCounter++;
-                while (isDigit(x))
+                while (isDigit(a))
                 {
-                    temp += x;
-                    x = getNextChar();
+                    temp += a;
+                    a = getNextChar();
                     charCounter++;
                 }
             }
-            if(a == TokenType.INT_LIT)
+            if(t == TokenType.INT_LIT)
             {
-                item = new Tokens(a, temp, Convert.ToInt32(temp), line);
+                item = new Tokens(t, temp, Convert.ToInt32(temp), line);
                 tokens.Add(item);
             } else
             {
-                item = new Tokens(a, temp, Convert.ToDouble(temp), line);
+                item = new Tokens(t, temp, Convert.ToDouble(temp), line);
                 tokens.Add(item);
             }
         }

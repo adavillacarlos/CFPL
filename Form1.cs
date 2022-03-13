@@ -85,7 +85,8 @@ namespace CFPL
                 }
             } else
             {
-                richTextBox2.Text = ""; 
+                richTextBox2.Text = "";
+                richTextBox3.Text = ""; 
                 foreach (string a in interpreter.ErrorMessages)
                 {
                     richTextBox2.Text += a + "\n";
