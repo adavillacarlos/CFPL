@@ -83,7 +83,7 @@ namespace CFPL
                 {
                     if (a == "#")
                     {
-                        richTextBox2.Text += "\n"; 
+                        richTextBox3.Text += "\n"; 
                     } else
                     {
                         richTextBox3.Text += a;

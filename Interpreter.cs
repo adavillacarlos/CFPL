@@ -194,15 +194,15 @@ namespace CFPL
             string temp_identOut = "";
             string output = "";
             tokenCounter2 = tokenCounter;
-            if (tokens[tokenCounter2].Type == TokenType.COLON)
+            if (tokens[tokenCounter2].Type == TokenType.COLON && tokens[tokenCounter2+1].Type != TokenType.AMPERSAND)
             {
                 tokenCounter2++;
+   
                 while (tokens[tokenCounter2].Type == TokenType.IDENTIFIER || tokens[tokenCounter2].Type == TokenType.D_QUOTE)
                 {
                     switch (tokens[tokenCounter2].Type)
                     {
                         case TokenType.IDENTIFIER:
-                            Console.WriteLine("iDENTIFIER"); 
                             temp_identOut = tokens[tokenCounter2].Lexeme;
                             Console.WriteLine(temp_identOut);
                             if (outputMap.ContainsKey(temp_identOut)) //checks if the identifier is inside the final outputMap
@@ -221,25 +221,36 @@ namespace CFPL
                             tokenCounter2++;
                             break;
                         case TokenType.D_QUOTE:
-                            Console.WriteLine("Quotes"); 
-                            tokenCounter2++;
-                            //?? 
-                                outputMessages.Add(tokens[tokenCounter2].Lexeme);
-                                tokenCounter2++; 
-
-                            if(tokens[tokenCounter2].Type == TokenType.D_QUOTE)
+                            tokenCounter2++; 
+                            if(tokens[tokenCounter2].Type == TokenType.SHARP)
                             {
+                                outputMessages.Add("#");
                                 tokenCounter2++; 
                             } else
+                            {
+                                outputMessages.Add(tokens[tokenCounter2].Lexeme);
+                                tokenCounter2++; 
+                            }
+                            if (tokens[tokenCounter2].Type == TokenType.D_QUOTE)
+                            {
+                                tokenCounter2++;
+                            }
+                            else
                             {
                                 msg = "Missing double quotes at line " + (tokens[tokenCounter].Line + 1);
                                 errorMessages.Add(msg);
                                 Console.WriteLine(msg);
                                 error = true;
                             }
-                            break;
-                        default:
                             break; 
+                        default:
+                          
+                            break; 
+                    }
+                    if(tokens[tokenCounter2].Type == TokenType.AMPERSAND)
+                    {
+                        tokenCounter2++;
+                        continue;
                     }
                     if (error)
                     {
@@ -247,6 +258,11 @@ namespace CFPL
                         break;
                     }
                 }
+            } else
+            {
+                msg = "Something wrong with the OUTPUT at line " + (tokens[tokenCounter].Line + 1);
+                errorMessages.Add(msg);
+                Console.WriteLine(msg);
             }
 
         }
