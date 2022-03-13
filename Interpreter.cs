@@ -432,6 +432,22 @@ namespace CFPL
                         declaredVariables.Add(temp_ident, (double)tokens[tokenCounter].Literal);
                         tokenCounter++;
                         break;
+                    case TokenType.SUBT:
+                        tokenCounter++;
+                        if (tokens[tokenCounter].Type == TokenType.FLOAT_LIT)
+                            declaredVariables.Add(temp_ident, ((double)tokens[tokenCounter++].Literal) * -1);
+                        else{ if (tokens[tokenCounter].Type == TokenType.INT_LIT)
+                                declaredVariables.Add(temp_ident, ((int)tokens[tokenCounter++].Literal) * -1);
+                        }
+                        break;
+                    case TokenType.ADD:
+                        tokenCounter++;
+                        if (tokens[tokenCounter].Type == TokenType.FLOAT_LIT)
+                            declaredVariables.Add(temp_ident, ((double)tokens[tokenCounter++].Literal));
+                        else { if(tokens[tokenCounter].Type == TokenType.INT_LIT)
+                            declaredVariables.Add(temp_ident, ((int)tokens[tokenCounter++].Literal));
+                        }
+                        break;
                     default:
                         msg = "Syntax Error at line " + ((tokens[tokenCounter].Line + 1));
                         errorMessages.Add(msg);
