@@ -46,6 +46,22 @@ namespace CFPL
             {
                 switch (tokens[tokenCounter].Type)
                 {
+                   case TokenType.MULT:
+                        // where multiplication token is correctly placed
+                        if (tokens[tokenCounter - 1].Type == TokenType.RIGHT_PAREN || tokens[tokenCounter - 1].Type == TokenType.RIGHT_BRACE ||
+                            tokens[tokenCounter - 1].Type == TokenType.FLOAT_LIT || tokens[tokenCounter - 1].Type == TokenType.INT_LIT ||
+                            tokens[tokenCounter - 1].Type == TokenType.IDENTIFIER) {
+
+                        }
+                        else
+                        {
+                            int line = tokens[tokenCounter].Line; // comment's line
+                            while (line >= tokens[tokenCounter].Line) // skip all tokens with the same line as comment's 
+                            {
+                                tokenCounter++;
+                            }
+                        }
+                        break;
                     case TokenType.VAR:
                         //error messages does not work NGANO MAN KAIRIT HA
                         if (foundStart)
@@ -197,8 +213,8 @@ namespace CFPL
             if (tokens[tokenCounter2].Type == TokenType.COLON && tokens[tokenCounter2+1].Type != TokenType.AMPERSAND)
             {
                 tokenCounter2++;
-   
-                while (tokens[tokenCounter2].Type == TokenType.IDENTIFIER || tokens[tokenCounter2].Type == TokenType.D_QUOTE)
+   // tokens[tokenCounter2].Type == TokenType.IDENTIFIER || tokens[tokenCounter2].Type == TokenType.D_QUOTE
+                while (tokenCounter2 < tokens.Count - 1)
                 {
                     switch (tokens[tokenCounter2].Type)
                     {
@@ -224,9 +240,20 @@ namespace CFPL
                             tokenCounter2++; 
                             if(tokens[tokenCounter2].Type == TokenType.SHARP)
                             {
-                                outputMessages.Add("#");
+                                outputMessages.Add("\n");
                                 tokenCounter2++; 
-                            } else
+                            } 
+                            else if(tokens[tokenCounter2].Type == TokenType.LEFT_BRACE)
+                            {
+                                tokenCounter2++;
+                                while (tokens[tokenCounter2].Type != TokenType.RIGHT_BRACE)
+                                {
+                                    outputMessages.Add(tokens[tokenCounter2].Lexeme);
+                                    tokenCounter2++;
+                                }
+                                tokenCounter2++;
+                            }
+                            else
                             {
                                 outputMessages.Add(tokens[tokenCounter2].Lexeme);
                                 tokenCounter2++; 
@@ -243,15 +270,14 @@ namespace CFPL
                                 error = true;
                             }
                             break; 
+                        case TokenType.AMPERSAND:
+                            tokenCounter2++;
+                            continue;
                         default:
                           
                             break; 
                     }
-                    if(tokens[tokenCounter2].Type == TokenType.AMPERSAND)
-                    {
-                        tokenCounter2++;
-                        continue;
-                    }
+                
                     if (error)
                     {
                         error = false;
