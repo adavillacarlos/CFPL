@@ -76,6 +76,8 @@ namespace CFPL
                         {
                             tokenCounter++; //iterate to get the variable name
                             ParseDeclaration();
+                            if (error)
+                                break; 
                         }
                         break;
                     case TokenType.AS:
@@ -200,6 +202,7 @@ namespace CFPL
                     msg = "Syntax Error. Variable Assignation failed at line " + (tokens[tokenCounter].Line + 1);
                     errorMessages.Add(msg);
                     Console.WriteLine(msg);
+                    error = true; 
                 }
 
             }
