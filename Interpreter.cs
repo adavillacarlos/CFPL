@@ -247,15 +247,23 @@ namespace CFPL
                                 outputMessages.Add(" ");
                                 tokenCounter2++;
                             }
-                            else if(tokens[tokenCounter2].Type == TokenType.LEFT_BRACE)
+                             else if (tokens[tokenCounter2].Type == TokenType.LEFT_BRACE)
                             {
                                 tokenCounter2++;
-                                while (tokens[tokenCounter2].Type != TokenType.RIGHT_BRACE)
+                                if (tokens[tokenCounter2].Type == TokenType.RIGHT_BRACE && tokens[tokenCounter2 + 1].Type == TokenType.RIGHT_BRACE)
                                 {
                                     outputMessages.Add(tokens[tokenCounter2].Lexeme);
                                     tokenCounter2++;
                                 }
-                                tokenCounter2++;
+                                else
+                                { 
+                                    while (tokens[tokenCounter2].Type != TokenType.RIGHT_BRACE)
+                                    {
+                                        outputMessages.Add(tokens[tokenCounter2].Lexeme);
+                                        tokenCounter2++;
+                                    }
+                                }
+                                    tokenCounter2++;
                             }
                             else
                             {
