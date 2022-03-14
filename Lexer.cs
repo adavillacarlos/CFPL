@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CFPL
 {
-    class Scanner
+    class Lexer
     {
         private readonly List<Tokens> tokens;
         private readonly string[] source;
@@ -16,35 +16,34 @@ namespace CFPL
             private int charCounter;
             private int currStringLength;
         private Tokens item;
-        private static List<string> errorMsg;
+        private static List<string> errorMessages;
         string msg = ""; 
 
         public List<Tokens> Tokens { get {  return tokens; } }
-       
+        public List<string> ErrorMessages { get { return errorMessages; } }
 
-        public List<string> ErrorMsg { get { return errorMsg; } }
-        public Scanner(string source)
+        public Lexer(string source)
         {
             tokens = new List<Tokens>();
             this.source = source.Split(stringSeparators, StringSplitOptions.RemoveEmptyEntries);
             line = 0;
             currString = ""; 
             charCounter = 0;
-            errorMsg = new List<string>();
+            errorMessages = new List<string>();
         }
 
-        //Process the entire string
-        public int Process()
+        //Analyze the entire string
+        public int Analyze()
         {
             int i = 0;
             while (i < source.Length)
             {
-                ProcessLine();
+                AnalyzeLine();
                 line++;
                 i++;
                 charCounter = 0; 
             }
-            return errorMsg.Count != 0 ? 1 : 0; 
+            return errorMessages.Count != 0 ? 1 : 0; 
              
         }
 
@@ -53,9 +52,9 @@ namespace CFPL
             return charCounter +  1 < currStringLength ? currString[charCounter + 1] : '|';
         }
 
-        //Process line by line.
+        //Analyze line by line.
         //Adding character by character
-        private void ProcessLine()
+        private void AnalyzeLine()
         {
           
             currString = source[line];
@@ -101,7 +100,7 @@ namespace CFPL
                         }
                         else
                         {
-                            item = new Tokens(TokenType.D_QUOTE, x.ToString(), null, line);
+                            item = new Tokens(TokenType.DOUBLE_QUOTE, x.ToString(), null, line);
                             tokens.Add(item);
                             charCounter++;
                         }
@@ -209,7 +208,7 @@ namespace CFPL
                         } else
                         {
                             msg = "Encountered unsupported character" +  x + " at line " + line + 1;  
-                            errorMsg.Add(msg);
+                            errorMessages.Add(msg);
                             Console.WriteLine(msg); 
                             charCounter++; 
                         }
@@ -249,7 +248,7 @@ namespace CFPL
             }
             else
             {
-                errorMsg.Add(string.Format("Invalid value at line {0}.", line + 1));
+                errorMessages.Add(string.Format("Invalid value at line {0}.", line + 1));
             }
 
         }
@@ -323,7 +322,7 @@ namespace CFPL
                    else
                     {
                         msg = "Invalid usage of reserved word INT at line " + line + 1;
-                        errorMsg.Add(msg);
+                        errorMessages.Add(msg);
                         Console.WriteLine(msg);
                     }
                     break;
@@ -333,7 +332,7 @@ namespace CFPL
                     else
                     {
                         msg = "Invalid usage of reserved word FLOAT at line " + line + 1;
-                        errorMsg.Add(msg);
+                        errorMessages.Add(msg);
                         Console.WriteLine(msg);
                     }
                 
@@ -357,7 +356,7 @@ namespace CFPL
                     } else
                     {
                         msg = "Invalid usage of reserved word CHAR at line " + line + 1;
-                        errorMsg.Add(msg);
+                        errorMessages.Add(msg);
                         Console.WriteLine(msg);
                     }
                     break;

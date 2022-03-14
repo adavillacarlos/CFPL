@@ -15,7 +15,6 @@ namespace CFPL
         private static List<string> outputMessages;
 
         List<string> varDeclareList = new List<string>();
-
         private static Dictionary<string, object> outputMap;
         Dictionary<string, object> declaredVariables = new Dictionary<string, object>();
         private int startCount = 0;
@@ -24,6 +23,7 @@ namespace CFPL
         string temp_ident = "";
         string msg = "";
         bool error;
+        int result; 
 
         public Interpreter(List<Tokens> t)
         {
@@ -63,7 +63,6 @@ namespace CFPL
                         }
                         break;
                     case TokenType.VAR:
-                        //error messages does not work NGANO MAN KAIRIT HA
                         if (foundStart)
                         {
                             msg = "Invalid variable declaration due to START at line " + (tokens[tokenCounter].Line + 1);
@@ -216,14 +215,13 @@ namespace CFPL
             if (tokens[tokenCounter2].Type == TokenType.COLON && tokens[tokenCounter2+1].Type != TokenType.AMPERSAND)
             {
                 tokenCounter2++;
-   // tokens[tokenCounter2].Type == TokenType.IDENTIFIER || tokens[tokenCounter2].Type == TokenType.D_QUOTE
+   // tokens[tokenCounter2].Type == TokenType.IDENTIFIER || tokens[tokenCounter2].Type == TokenType.DOUBLE_QUOTE
                 while (tokenCounter2 < tokens.Count - 1)
                 {
                     switch (tokens[tokenCounter2].Type)
                     {
                         case TokenType.IDENTIFIER:
                             temp_identOut = tokens[tokenCounter2].Lexeme;
-                            Console.WriteLine(temp_identOut);
                             if (outputMap.ContainsKey(temp_identOut)) //checks if the identifier is inside the final outputMap
                             {
                                 output = outputMap[temp_identOut].ToString();
@@ -239,9 +237,9 @@ namespace CFPL
                             }
                             tokenCounter2++;
                             break;
-                        case TokenType.D_QUOTE:
-                            tokenCounter2++; 
-                            if(tokens[tokenCounter2].Type == TokenType.SHARP)
+                        case TokenType.DOUBLE_QUOTE:
+                            tokenCounter2++;
+                            if (tokens[tokenCounter2].Type == TokenType.SHARP)
                             {
                                 outputMessages.Add("\n");
                                 tokenCounter2++; 
@@ -273,7 +271,7 @@ namespace CFPL
                                 outputMessages.Add(tokens[tokenCounter2].Lexeme);
                                 tokenCounter2++; 
                             }
-                            if (tokens[tokenCounter2].Type == TokenType.D_QUOTE)
+                            if (tokens[tokenCounter2].Type == TokenType.DOUBLE_QUOTE)
                             {
                                 tokenCounter2++;
                             }
@@ -327,7 +325,7 @@ namespace CFPL
                             }
                             else
                             {
-                                msg = "Type Error at Line: " + tokens[tokenCounter].Line;
+                                msg = "Type Error at Line: " + (tokens[tokenCounter].Line + 1);
                                 errorMessages.Add(msg);
                                 Console.WriteLine(msg);
                             }

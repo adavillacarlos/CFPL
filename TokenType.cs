@@ -13,10 +13,8 @@ namespace CFPL
         LEFT_BRACE, RIGHT_BRACE, //[]  
         COMMA, EQUALS, COLON,  // , =  :
 
-
-
         //Escape character
-        SHARP, AMPERSAND, D_QUOTE,//# & "
+        SHARP, AMPERSAND, DOUBLE_QUOTE,//# & "
         TILDE, 
 
         //Operation

@@ -13,8 +13,8 @@ namespace CFPL
     public partial class Form1 : Form
     {
         String filePath;
-        Scanner scanner;
-        int errorScanner;
+        Lexer lexer;
+        int errorLexer;
         Interpreter interpreter;
         int errorInterpreter; 
 
@@ -69,13 +69,13 @@ namespace CFPL
 
         private void button4_Click(object sender, EventArgs e)
         {
-            scanner = new Scanner(fastColoredTextBox1.Text);
-            errorScanner = scanner.Process();
-            List<Tokens> t = new List<Tokens>(scanner.Tokens);
-            interpreter = new Interpreter(scanner.Tokens);
+            lexer = new Lexer(fastColoredTextBox1.Text);
+            errorLexer = lexer.Analyze();
+            List<Tokens> t = new List<Tokens>(lexer.Tokens);
+            interpreter = new Interpreter(lexer.Tokens);
             errorInterpreter = interpreter.Parse();
 
-            if (errorInterpreter == 0)
+            if (errorLexer==0 && errorInterpreter == 0)
             {
                 richTextBox2.Text = "Compiled Successfully";
                 richTextBox3.Text = "";
@@ -88,7 +88,11 @@ namespace CFPL
             } else
             {
                 richTextBox2.Text = "";
-                richTextBox3.Text = ""; 
+                richTextBox3.Text = "";
+                foreach (string a in lexer.ErrorMessages)
+                {
+                    richTextBox2.Text += a + "\n";
+                }
                 foreach (string a in interpreter.ErrorMessages)
                 {
                     richTextBox2.Text += a + "\n";
