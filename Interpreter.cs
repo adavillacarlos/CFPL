@@ -242,7 +242,11 @@ namespace CFPL
                             {
                                 outputMessages.Add("\n");
                                 tokenCounter2++; 
-                            } 
+                            } else if (tokens[tokenCounter2].Type == TokenType.TILDE)
+                            {
+                                outputMessages.Add(" ");
+                                tokenCounter2++;
+                            }
                             else if(tokens[tokenCounter2].Type == TokenType.LEFT_BRACE)
                             {
                                 tokenCounter2++;

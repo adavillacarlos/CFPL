@@ -140,6 +140,10 @@ namespace CFPL
                         tokens.Add(new Tokens(TokenType.RIGHT_PAREN, x.ToString(), null, line));
                         charCounter++;
                         break;
+                    case '~':
+                        tokens.Add(new Tokens(TokenType.TILDE, x.ToString(), null, line));
+                        charCounter++;
+                        break;
                     case '>':
                         if (getNextChar() == '=')
                         {

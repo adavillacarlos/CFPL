@@ -17,6 +17,7 @@ namespace CFPL
 
         //Escape character
         SHARP, AMPERSAND, D_QUOTE,//# & "
+        TILDE, 
 
         //Operation
         MULT, ADD, SUBT, DIV, MOD, //* + - / %
