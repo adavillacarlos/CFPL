@@ -16,7 +16,7 @@ namespace CFPL
         Lexer lexer;
         int errorLexer;
         Interpreter interpreter;
-        int errorInterpreter; 
+        int errorInterpreter;
 
         public Form1()
         {
@@ -69,10 +69,11 @@ namespace CFPL
 
         private void button4_Click(object sender, EventArgs e)
         {
+            string input = richTextBox1.Text;
             lexer = new Lexer(fastColoredTextBox1.Text);
             errorLexer = lexer.Analyze();
             List<Tokens> t = new List<Tokens>(lexer.Tokens);
-            interpreter = new Interpreter(lexer.Tokens);
+            interpreter = new Interpreter(lexer.Tokens,input);
             errorInterpreter = interpreter.Parse();
 
             if (errorLexer==0 && errorInterpreter == 0)
@@ -105,6 +106,11 @@ namespace CFPL
         private void button5_Click(object sender, EventArgs e)
         {
             Console.WriteLine("Hello World"); 
+        }
+
+        private void fastColoredTextBox1_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

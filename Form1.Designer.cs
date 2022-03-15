@@ -69,19 +69,21 @@ namespace CFPL
             this.fastColoredTextBox1.CharWidth = 10;
             this.fastColoredTextBox1.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.fastColoredTextBox1.DisabledColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(180)))), ((int)(((byte)(180)))), ((int)(((byte)(180)))));
+            this.fastColoredTextBox1.Font = new System.Drawing.Font("Courier New", 9.75F);
             this.fastColoredTextBox1.IsReplaceMode = false;
             this.fastColoredTextBox1.Location = new System.Drawing.Point(30, 22);
             this.fastColoredTextBox1.Name = "fastColoredTextBox1";
             this.fastColoredTextBox1.Paddings = new System.Windows.Forms.Padding(0);
             this.fastColoredTextBox1.SelectionColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(255)))));
             this.fastColoredTextBox1.ServiceColors = ((FastColoredTextBoxNS.ServiceColors)(resources.GetObject("fastColoredTextBox1.ServiceColors")));
-            this.fastColoredTextBox1.Size = new System.Drawing.Size(720, 303);
+            this.fastColoredTextBox1.Size = new System.Drawing.Size(516, 352);
             this.fastColoredTextBox1.TabIndex = 8;
             this.fastColoredTextBox1.Zoom = 100;
+            this.fastColoredTextBox1.Load += new System.EventHandler(this.fastColoredTextBox1_Load);
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(1092, 73);
+            this.button1.Location = new System.Drawing.Point(598, 51);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(96, 23);
             this.button1.TabIndex = 9;
@@ -91,7 +93,7 @@ namespace CFPL
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(1092, 119);
+            this.button2.Location = new System.Drawing.Point(598, 98);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(96, 23);
             this.button2.TabIndex = 10;
@@ -101,7 +103,7 @@ namespace CFPL
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(1092, 166);
+            this.button3.Location = new System.Drawing.Point(598, 143);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(96, 23);
             this.button3.TabIndex = 11;
@@ -111,7 +113,7 @@ namespace CFPL
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(1092, 302);
+            this.button4.Location = new System.Drawing.Point(598, 351);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(96, 23);
             this.button4.TabIndex = 12;
@@ -121,24 +123,24 @@ namespace CFPL
             // 
             // richTextBox1
             // 
-            this.richTextBox1.Location = new System.Drawing.Point(776, 73);
+            this.richTextBox1.Location = new System.Drawing.Point(30, 416);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(274, 252);
+            this.richTextBox1.Size = new System.Drawing.Size(516, 87);
             this.richTextBox1.TabIndex = 14;
             this.richTextBox1.Text = "";
             // 
             // richTextBox2
             // 
-            this.richTextBox2.Location = new System.Drawing.Point(30, 395);
+            this.richTextBox2.Location = new System.Drawing.Point(30, 659);
             this.richTextBox2.Name = "richTextBox2";
-            this.richTextBox2.Size = new System.Drawing.Size(720, 78);
+            this.richTextBox2.Size = new System.Drawing.Size(516, 78);
             this.richTextBox2.TabIndex = 15;
             this.richTextBox2.Text = "";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(773, 39);
+            this.label1.Location = new System.Drawing.Point(27, 393);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(43, 17);
             this.label1.TabIndex = 16;
@@ -147,7 +149,7 @@ namespace CFPL
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(27, 364);
+            this.label2.Location = new System.Drawing.Point(27, 633);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(67, 17);
             this.label2.TabIndex = 17;
@@ -155,16 +157,16 @@ namespace CFPL
             // 
             // richTextBox3
             // 
-            this.richTextBox3.Location = new System.Drawing.Point(776, 395);
+            this.richTextBox3.Location = new System.Drawing.Point(30, 538);
             this.richTextBox3.Name = "richTextBox3";
-            this.richTextBox3.Size = new System.Drawing.Size(412, 78);
+            this.richTextBox3.Size = new System.Drawing.Size(516, 79);
             this.richTextBox3.TabIndex = 18;
             this.richTextBox3.Text = "";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(773, 364);
+            this.label3.Location = new System.Drawing.Point(27, 511);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(55, 17);
             this.label3.TabIndex = 19;
@@ -174,7 +176,7 @@ namespace CFPL
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1228, 513);
+            this.ClientSize = new System.Drawing.Size(734, 764);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.richTextBox3);
             this.Controls.Add(this.label2);

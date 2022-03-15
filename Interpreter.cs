@@ -23,9 +23,13 @@ namespace CFPL
         string temp_ident = "";
         string msg = "";
         bool error;
-        int result; 
+        int result;
+        string stringInput;
+        FSM fsm;
+        List<String> inputVariables = new List<string>();
 
-        public Interpreter(List<Tokens> t)
+
+        public Interpreter(List<Tokens> t, string input)
         {
             tokens = new List<Tokens>(t);
             errorMessages = new List<string>();
@@ -34,6 +38,8 @@ namespace CFPL
             foundStart = foundStop = false;
             outputMap = new Dictionary<string, object>();
             error = false;
+            fsm = new FSM(tokens);
+            stringInput = input;
         }
 
         public List<string> ErrorMessages { get { return errorMessages; } }
@@ -63,9 +69,17 @@ namespace CFPL
                         }
                         break;
                     case TokenType.VAR:
+                        result = fsm.Declaration(tokens, tokenCounter);
                         if (foundStart)
                         {
                             msg = "Invalid variable declaration due to START at line " + (tokens[tokenCounter].Line + 1);
+                            Console.WriteLine(msg);
+                            errorMessages.Add(msg);
+                            tokenCounter++;
+                            break;
+                        } else if (result == 0)
+                        {
+                            msg = "Error in the declaration at line " + (tokens[tokenCounter].Line + 1);
                             Console.WriteLine(msg);
                             errorMessages.Add(msg);
                             tokenCounter++;
@@ -119,9 +133,34 @@ namespace CFPL
                         ParseIdentifier(temp_ident);
                         break;
                     case TokenType.OUTPUT:
-                        tokenCounter++;
-                        ParseOutput();
+                        result = fsm.Output(tokens, tokenCounter);
+                        if (result == 1)
+                        {
+                            tokenCounter++;
+                            ParseOutput();
+                        } else
+                        {
+                            msg = "Syntax Error. There is something wrong with OUTPUT at line " + (tokens[tokenCounter].Line + 1);
+                            errorMessages.Add(msg);
+                            Console.WriteLine(msg);
+                            tokenCounter++;
+                        }
+
                         break;
+                    case TokenType.INPUT:
+                        result = fsm.Input(tokens, tokenCounter); 
+                        if(result == 1)
+                        {
+                            tokenCounter++;
+                            ParseInput(); 
+                        } else
+                        {
+                            msg = "Syntax Error. There is something wrong with INPUT at line " + (tokens[tokenCounter].Line + 1);
+                            errorMessages.Add(msg);
+                            Console.WriteLine(msg);
+                            tokenCounter++;
+                        }
+                        break; 
                     case TokenType.INT_LIT:
                         temp = (int)tokens[tokenCounter].Literal; //have to check if everything is valid as well
                         tokenCounter++;
@@ -155,11 +194,114 @@ namespace CFPL
             return errorMessages.Count;
         }
 
+        /* 
+         * ParseInput:
+         * Reads and Saves the inputted values to the outputMap
+         */
+        private void ParseInput()
+        {
+            if(tokens[tokenCounter].Type == TokenType.COLON)
+            {
+                tokenCounter++;
+                if(tokens[tokenCounter].Type == TokenType.IDENTIFIER)
+                {
+                    ParseInputVariables();
+                    if (tokens[tokenCounter].Type == TokenType.COMMA)
+                    {
+                        while(tokens[tokenCounter].Type == TokenType.COMMA)
+                        {
+                            tokenCounter++;
+                            ParseInputVariables(); 
+                        }
+                    }
+                    ParseInputValues(); 
+
+                }
+
+            }
+        }
+ 
+        /* 
+         * Helper Function for ParseInput: 
+         * Saving the strings in input textbox to get saved to outputMap
+         */ 
+        private void ParseInputValues()
+        {
+            String[] inputValues = stringInput.Split(','); //Values
+            Type type; 
+            if (inputValues.Length == inputVariables.Count)
+            {
+                int x = 0;
+                for (int i = 0; i < inputVariables.Count; i++)
+                {
+                    string v = inputVariables[i];
+                    type = outputMap[v].GetType();
+                    if (type == typeof(int))
+                    {
+                        try { outputMap[v] = int.Parse(inputValues[x++]); }
+                        catch (Exception)
+                        {
+                            msg = "Type does not match at INPUT.";
+                            errorMessages.Add(msg);
+                            Console.WriteLine(msg);
+                        }
+                    } else if(type == typeof(double))
+                    {
+                        try { outputMap[v] = double.Parse(inputValues[x++]); }
+                        catch (Exception)
+                        {
+                            msg = "Type does not match at INPUT.";
+                            errorMessages.Add(msg);
+                            Console.WriteLine(msg);
+                        }
+                    } else if(type == typeof(char))
+                    {
+                        try { outputMap[v] = char.Parse(inputValues[x++]); }
+                        catch (Exception)
+                        {
+                            msg = "Type does not match at INPUT.";
+                            errorMessages.Add(msg);
+                            Console.WriteLine(msg);
+                        }
+                    } else if(type == typeof(string))
+                    {
+                        try { outputMap[v] = inputValues[x++]; }
+                        catch (Exception)
+                        {
+                            msg = "Type does not match at INPUT.";
+                            errorMessages.Add(msg);
+                            Console.WriteLine(msg);
+                        }
+                    }
+                }
+
+            }
+        }
+
+        /* 
+         * Helper Function for ParseInput: 
+         * Get the variables in the Compiler and save it to the input variables list for later checking
+         */ 
+        private void ParseInputVariables()
+        {
+            if (outputMap.ContainsKey(tokens[tokenCounter].Lexeme))
+            {
+                inputVariables.Add(tokens[tokenCounter].Lexeme);
+                tokenCounter++;
+            }
+            else
+            {
+                msg = "Variable not initialized at line " + (tokens[tokenCounter].Line + 1);
+                errorMessages.Add(msg);
+                Console.WriteLine(msg);
+            }
+        }
+
         //Mostly used if identifier is declaredVariables inside the START keyword
         private void ParseIdentifier(string identifier)
         {
             /*
-             *   outputMap.Select(i => $"{i.Key}").ToList().ForEach(Console.WriteLine);
+             *   outputMap.Select(stringInput => $"{stringInput.Key}").ToList().ForEach(Console.WriteLine);
              *    Console.WriteLine(tokens[tokenCounter].Lexeme);
              */
             int currentLine = tokens[tokenCounter].Line;
@@ -207,6 +349,10 @@ namespace CFPL
             }
         }
 
+        /*
+         * ParseOutput:
+         * Saves the data inside the outputMap to the outputMessages for printing
+         */
         private void ParseOutput()
         {
             string temp_identOut = "";
@@ -299,7 +445,7 @@ namespace CFPL
                 }
             } else
             {
-                msg = "Something wrong with the OUTPUT at line " + (tokens[tokenCounter].Line + 1);
+                msg = "Syntax Error. Something wrong with the OUTPUT at line " + (tokens[tokenCounter].Line + 1);
                 errorMessages.Add(msg);
                 Console.WriteLine(msg);
             }
@@ -427,7 +573,11 @@ namespace CFPL
             }
         }
 
-        //Get the variable name declaredVariables and save it to the declaredVariables dictionary
+        /* 
+         * ParseDeclaration: 
+         * Gets the declared variable name then saves it to the declaredVariables dictionary 
+         * If it does have a declared value, it gets passed to the ParseEqual() function
+         */
         private void ParseDeclaration()
         {
             if (tokens[tokenCounter].Type == TokenType.IDENTIFIER)
@@ -450,6 +600,10 @@ namespace CFPL
 
         }
 
+        /* 
+         * Helper Function for ParseDeclaration: 
+         * Used in Commas 
+         */ 
         private void ParseCommas()
         {
             while (tokens[tokenCounter].Type == TokenType.COMMA)
@@ -477,6 +631,10 @@ namespace CFPL
             }
         }
 
+        /* 
+         * Helper Function for ParseDeclaration: 
+         * If EQUAL sign is available, save the variable together with its value
+         */ 
         private void ParseEqual()
         {
             if (tokens[tokenCounter].Type == TokenType.EQUALS) //if the value is going to get declaredVariables as well
