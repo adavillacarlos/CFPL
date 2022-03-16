@@ -59,6 +59,7 @@ namespace CFPL
                         break;
                     case TokenType.BOOL_LIT:
                         input = 4;
+                        tokenCounter++; 
                         break;
                     case TokenType.AS:
                         input = 5;
@@ -90,13 +91,15 @@ namespace CFPL
         public int Output(List<Tokens> tokens, int tokenCounter)
         {
             stateTable = new int[,] {
-              { 1, 4, 4, 4, 4, 4 },
-              { 4, 2, 4, 4, 4, 4 },
-              { 4, 4, 3, 4, 5, 4 },
-              { 4, 4, 4, 2, 4, 4 },
-              { 4, 4, 4, 4, 4, 4 },
-              { 4, 4, 6, 4, 4, 6 },
-              { 4, 4, 4, 4, 3, 4 }, 
+              { 1, 4, 4, 4, 4, 4, 4, 4, 4 },
+              { 4, 2, 4, 4, 4, 4, 4, 4, 4 },
+              { 4, 4, 3, 4, 5, 4, 4, 4, 4 },
+              { 4, 4, 4, 2, 4, 4, 4, 4, 4 },
+              { 4, 4, 4, 4, 4, 4, 4, 4, 4 },
+              { 4, 4, 6, 4, 4, 6, 7, 4, 6 },
+              { 4, 4, 4, 4, 3, 4, 4, 4, 4 },
+              { 8, 8, 8, 8, 8, 8, 8, 8, 8 },
+              { 4, 4, 4, 4, 3, 4, 4, 6, 4 },
             };
             state = 0;
             input = 0;
@@ -126,6 +129,15 @@ namespace CFPL
                     case TokenType.SHARP:
                         input = 5;
                         break;
+                    case TokenType.LEFT_BRACE:
+                        input = 6;
+                        break;
+                    case TokenType.RIGHT_BRACE:
+                        input = 7;
+                        break;
+                    default:
+                        input= 8; 
+                        break; 
 
                 }
                 state = stateTable[state, input];
