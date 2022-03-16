@@ -132,20 +132,45 @@ namespace CFPL
                         temp_ident = tokens[tokenCounter++].Lexeme;
                         ParseIdentifier(temp_ident);
                         break;
-                    case TokenType.OUTPUT:
-                        result = fsm.Output(tokens, tokenCounter);
-                        if (result == 1)
+                    case TokenType.SUBT: // for pre decrement
+                        if (foundStart)
                         {
                             tokenCounter++;
-                            ParseOutput();
-                        } else
-                        {
-                            msg = "Syntax Error. There is something wrong with OUTPUT at line " + (tokens[tokenCounter].Line + 1);
-                            errorMessages.Add(msg);
-                            Console.WriteLine(msg);
-                            tokenCounter++;
+                            if (tokens[tokenCounter].Type == TokenType.SUBT && tokens[tokenCounter + 1].Type == TokenType.IDENTIFIER)
+                            {
+                                tokenCounter++; // points to the identifier
+                                string temp_iden = tokens[tokenCounter].Lexeme;
+                                if (outputMap.ContainsKey(temp_iden))
+                                {
+                                    int value = (int)outputMap[temp_iden];
+                                    outputMap[temp_iden] = value - 1;
+                                }
+                            }
                         }
-
+                        else
+                        {
+                            errorMessages.Add(string.Format("Syntax error at line  " + tokens[tokenCounter].Line + 1));
+                        }
+                        break;
+                    case TokenType.ADD: // for pre increment
+                        if (foundStart)
+                        {
+                            tokenCounter++;
+                            if (tokens[tokenCounter].Type == TokenType.ADD && tokens[tokenCounter + 1].Type == TokenType.IDENTIFIER)
+                            {
+                                tokenCounter++; // points to the identifier
+                                string temp_iden = tokens[tokenCounter].Lexeme;
+                                if (outputMap.ContainsKey(temp_iden))
+                                {
+                                    int value = (int)outputMap[temp_iden];
+                                    outputMap[temp_iden] = value + 1;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            errorMessages.Add(string.Format("Syntax error at line  " + tokens[tokenCounter].Line + 1));
+                        }
                         break;
                     case TokenType.INPUT:
                         result = fsm.Input(tokens, tokenCounter); 
@@ -161,6 +186,21 @@ namespace CFPL
                             tokenCounter++;
                         }
                         break; 
+                    case TokenType.OUTPUT:
+                        result = fsm.Output(tokens, tokenCounter);
+                        if (result == 1)
+                        {
+                            tokenCounter++;
+                            ParseOutput();
+                        } else
+                        {
+                            msg = "Syntax Error. There is something wrong with OUTPUT at line " + (tokens[tokenCounter].Line + 1);
+                            errorMessages.Add(msg);
+                            Console.WriteLine(msg);
+                            tokenCounter++;
+                        }
+
+                        break;
                     case TokenType.INT_LIT:
                         temp = (int)tokens[tokenCounter].Literal; //have to check if everything is valid as well
                         tokenCounter++;
@@ -300,22 +340,33 @@ namespace CFPL
         //Mostly used if identifier is declaredVariables inside the START keyword
         private void ParseIdentifier(string identifier)
         {
-            /*
-             *   outputMap.Select(stringInput => $"{stringInput.Key}").ToList().ForEach(Console.WriteLine);
-             *    Console.WriteLine(tokens[tokenCounter].Lexeme);
-             */
             int currentLine = tokens[tokenCounter].Line;
             object temp;
-            if (tokens[tokenCounter].Type == TokenType.EQUALS)
+            
+            if(foundStart)
             {
-                tokenCounter++;
-                tokenCounter2 = tokenCounter;
-                List<string> expression = new List<string>();
-                string a = "";
-
-                if (outputMap.ContainsKey(identifier)) //if there is an variable inside the final outputMap 
+                // code for binary and boolean operations
+            }
+            else
+            {
+                // meaning no VAR keyword, during variable declaration
+                if (!foundStart && (tokenCounter - 1 == 0 || tokens[tokenCounter - 1].Type != TokenType.VAR))
                 {
-                    //while relations 
+                    errorMessages.Add(string.Format("Invalid variable declaration at line " + tokens[tokenCounter + 1].Line));
+                }
+                else
+                {
+                    
+                    if (tokens[tokenCounter].Type == TokenType.EQUALS)
+                    {
+                        tokenCounter++;
+                        tokenCounter2 = tokenCounter;
+                        List<string> expression = new List<string>();
+                        string a = "";
+
+                        if (outputMap.ContainsKey(identifier)) //if there is an variable inside the final outputMap 
+                        {
+                            //while relations 
 
                     switch (tokens[tokenCounter].Type)
                     {
@@ -336,10 +387,6 @@ namespace CFPL
                             temp = (double)(tokens[tokenCounter].Literal);
                             outputMap[identifier] = temp;
                             break;
-                        case TokenType.IDENTIFIER:
-                            temp = outputMap[tokens[tokenCounter].Lexeme];
-                            outputMap[identifier] = temp;
-                            break; 
                     }
                 }
                 else
@@ -350,6 +397,8 @@ namespace CFPL
                     error = true; 
                 }
 
+                    }
+                }
             }
         }
 
