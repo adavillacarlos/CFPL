@@ -410,7 +410,8 @@ namespace CFPL
             if (tokens[tokenCounter2].Type == TokenType.COLON && tokens[tokenCounter2 + 1].Type != TokenType.AMPERSAND)
             {
                 tokenCounter2++;
-                // 
+                // tokens[tokenCounter2].Type == TokenType.IDENTIFIER || tokens[tokenCounter2].Type == TokenType.DOUBLE_QUOTE
+                // tokenCounter2 < tokens.Count - 1
                 while (tokens[tokenCounter2].Type == TokenType.IDENTIFIER || tokens[tokenCounter2].Type == TokenType.DOUBLE_QUOTE)
                 {
                     switch (tokens[tokenCounter2].Type)
@@ -430,7 +431,10 @@ namespace CFPL
                                 Console.WriteLine(msg);
                                 error = true;
                             }
-                            tokenCounter2++;
+                            if (tokens[tokenCounter2 + 1].Type == TokenType.AMPERSAND)
+                                tokenCounter2 += 2;
+                            else
+                                tokenCounter2++;
                             break;
                         case TokenType.DOUBLE_QUOTE:
                             tokenCounter2++;
@@ -469,7 +473,10 @@ namespace CFPL
                             }
                             if (tokens[tokenCounter2].Type == TokenType.DOUBLE_QUOTE)
                             {
-                                tokenCounter2++;
+                                if (tokens[tokenCounter2 + 1].Type == TokenType.AMPERSAND)
+                                    tokenCounter2 += 2;
+                                else
+                                    tokenCounter2++;
                             }
                             else
                             {
@@ -479,9 +486,6 @@ namespace CFPL
                                 error = true;
                             }
                             break;
-                        case TokenType.AMPERSAND:
-                            tokenCounter2++;
-                            continue;
                         default:
 
                             break;
