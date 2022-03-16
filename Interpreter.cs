@@ -500,6 +500,7 @@ namespace CFPL
                         break;
                     }
                 }
+                tokenCounter = tokenCounter2;
             } else
             {
                 msg = "Syntax Error. Something wrong with the OUTPUT at line " + (tokens[tokenCounter].Line + 1);
