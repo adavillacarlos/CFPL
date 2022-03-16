@@ -336,6 +336,10 @@ namespace CFPL
                             temp = (double)(tokens[tokenCounter].Literal);
                             outputMap[identifier] = temp;
                             break;
+                        case TokenType.IDENTIFIER:
+                            temp = outputMap[tokens[tokenCounter].Lexeme];
+                            outputMap[identifier] = temp;
+                            break; 
                     }
                 }
                 else
