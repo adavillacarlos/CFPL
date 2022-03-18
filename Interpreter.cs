@@ -497,6 +497,7 @@ namespace CFPL
                         break;
                     }
                 }
+                tokenCounter = tokenCounter2;
             }
             else
             {
