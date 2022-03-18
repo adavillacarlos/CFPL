@@ -48,6 +48,11 @@ namespace CFPL
         public int Parse()
         {
             object temp;
+            int startLine=0; 
+            if(tokens[tokens.Count-1].Type != TokenType.STOP)
+            {
+                errorMessages.Add("Missing STOP keyword"); 
+            }
             while (tokenCounter < tokens.Count) //counts it token by token
             {
                 switch (tokens[tokenCounter].Type)
@@ -93,6 +98,8 @@ namespace CFPL
                         break;
                     case TokenType.START: //ERROR DETECTING NOT WORKING HUHU
                         startCount++;
+                        startLine = tokens[tokenCounter].Line;
+
                         if (!foundStart)
                         {
                             foundStart = true;
@@ -107,14 +114,14 @@ namespace CFPL
                         break;
                     case TokenType.STOP:
                         stopCount++;
-                        //this doesn't really work well yet, need fixing :( 
-                        if (!foundStop && foundStart)
+                        //this doesn't really work well yet, need fixing 🙁 
+                        if (startLine != tokens[tokenCounter].Line && !foundStop && foundStart)
                         {
                             foundStop = true;
                         }
                         else
                         {
-                            msg = "Syntax Error. Incorrect usage of STOP at line " + (tokens[tokenCounter].Line + 1);
+                            msg = "Incorrect usage of STOP at line " + (tokens[tokenCounter].Line + 1);
                             errorMessages.Add(msg);
                             Console.WriteLine(msg);
                         }
@@ -383,6 +390,11 @@ namespace CFPL
                                 errorMessages.Add(msg);
                                 Console.WriteLine(msg);
                             }
+                            break;
+                        default:
+                            msg = "Identifier does not exist at line " + (tokens[tokenCounter].Line + 1);
+                            errorMessages.Add(msg);
+                            Console.WriteLine(msg);
                             break; 
                     }
                 }

@@ -207,7 +207,7 @@ namespace CFPL
                             CharVal(x); 
                         } else
                         {
-                            msg = "Encountered unsupported character" +  x + " at line " + line + 1;  
+                            msg = "Encountered unsupported character: " +  x + " at line " + (line + 1);  
                             errorMessages.Add(msg);
                             Console.WriteLine(msg); 
                             charCounter++; 
