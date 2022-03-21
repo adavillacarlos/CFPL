@@ -75,22 +75,22 @@ namespace CFPL
         }*/
         public int evaluateIntegerExpression(List<Tokens> postfix)
         {
-            int res=-99;
+            int res = -99;
             Stack<int> stack = new Stack<int>();
             List<string> postfixValues = new List<string>();
             int ctr = 0, val;
             int len = postfix.Count;
             //copying
-            while(ctr < len)
+            while (ctr < len)
             {
                 if (postfix[ctr].Type == TokenType.IDENTIFIER)
                 {
                     val = (int)variables[postfix[ctr].Lexeme];
                     postfixValues.Add(val.ToString());
                 }
-                else if(postfix[ctr].Type == TokenType.FLOAT_LIT || postfix[ctr].Type == TokenType.INT_LIT)
+                else if (postfix[ctr].Type == TokenType.FLOAT_LIT || postfix[ctr].Type == TokenType.INT_LIT)
                 {
-                    val = (int) postfix[ctr].Literal;
+                    val = (int)postfix[ctr].Literal;
                     postfixValues.Add(val.ToString());
                 }
                 else if (isOperator(postfix[ctr].Lexeme[0]))
@@ -104,18 +104,18 @@ namespace CFPL
             }
             ctr = 0;
             // postfix Values now contains a string of int literals and operators
-            while(ctr < len)
+            while (ctr < len)
             {
-                if(postfix[ctr].Type == TokenType.INT_LIT || postfix[ctr].Type == TokenType.FLOAT_LIT
+                if (postfix[ctr].Type == TokenType.INT_LIT || postfix[ctr].Type == TokenType.FLOAT_LIT
                 || postfix[ctr].Type == TokenType.IDENTIFIER)
                 {
                     stack.Push(int.Parse(postfixValues[ctr]));
                 }
                 else if (isOperator(postfixValues[ctr][0]))
                 {
-                    int n1 = (int) stack.Pop();
-                    int n2 = (int) stack.Pop();
-                    if(postfixValues[ctr] == "+")
+                    int n1 = (int)stack.Pop();
+                    int n2 = (int)stack.Pop();
+                    if (postfixValues[ctr] == "+")
                         res = n2 + n1;
                     if (postfixValues[ctr] == "-")
                         res = n2 - n1;
@@ -133,13 +133,13 @@ namespace CFPL
             res = (int)stack.Pop();
             return res;
         }
-       // public char evaluateCharPostfix(List<Tokens> postfix)
+        // public char evaluateCharPostfix(List<Tokens> postfix)
         //{
 
         //}
         public double evaluateFloatExpression(List<Tokens> postfix)
         {
-            double res=0.0, val;
+            double res = 0.0, val;
             Stack<double> stack = new Stack<double>();
             List<string> postfixValues = new List<string>();
             int ctr = 0;
@@ -200,10 +200,9 @@ namespace CFPL
         /*
          public bool evaluateBooleanExpression(List<Tokens> postfix)
         {
-
         }
         */
-        
+
         public bool isOperator(char x) // for binary only
         {
             return (x == '+' || x == '-' || x == '*' || x == '/' || x == '%');

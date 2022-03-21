@@ -27,7 +27,8 @@ namespace CFPL
         string stringInput;
         FSM fsm;
         List<String> inputVariables = new List<string>();
-
+        private List<Tokens> infixTokens;
+        private Operations operation;
 
         public Interpreter(List<Tokens> t, string input)
         {
@@ -372,6 +373,11 @@ namespace CFPL
             }
 
             return errorMessages.Count;
+        }
+
+        private bool isOperator(char v)
+        {
+            return operation.isOperator(v); 
         }
 
         /* 
