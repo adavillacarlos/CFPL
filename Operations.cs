@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CFPL_1
+namespace CFPL
 {
     class Operations
     {
