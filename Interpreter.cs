@@ -128,10 +128,147 @@ namespace CFPL
                         tokenCounter++;
                         break;
                     case TokenType.IDENTIFIER:
-                        //should happen after the var
-                        //happens after variable declaration
-                        temp_ident = tokens[tokenCounter++].Lexeme;
-                        ParseIdentifier(temp_ident);
+                        temp_ident = tokens[tokenCounter].Lexeme;
+                        tokenCounter++;
+                        if (foundStart)
+                        {
+                            List<Tokens> postfix = new List<Tokens>();
+                            // check if variable is declared
+                            if (outputMap.ContainsKey(temp_ident))
+                            {
+                               if(tokens[tokenCounter].Type == TokenType.EQUALS)
+                               {
+                                    tokenCounter++;
+                                    infixTokens = new List<Tokens>();
+                                    int line = tokens[tokenCounter-1].Line;
+                                    int n;
+                                    double m;
+                                    bool isFirst = true;
+                                    while (line >= tokens[tokenCounter].Line)
+                                    {
+                                        // infixTokens is a list of tokens found in the expression,
+                                        // that is to be used in converting infix to postfix
+
+                                        // a = -2, first element is unary
+                                        if (isFirst && (tokens[tokenCounter].Type == TokenType.ADD || tokens[tokenCounter].Type == TokenType.SUBT)
+                                            && (tokens[tokenCounter + 1].Type == TokenType.FLOAT_LIT || tokens[tokenCounter + 1].Type == TokenType.INT_LIT))
+                                        {
+                                            if(tokens[tokenCounter].Type == TokenType.SUBT)
+                                            {
+                                                tokenCounter++; // points to the literal
+                                                if (tokens[tokenCounter].Type == TokenType.INT_LIT)
+                                                {
+                                                    n = (int)tokens[tokenCounter].Literal;
+                                                    n *= -1;
+                                                    infixTokens.Add(new Tokens(tokens[tokenCounter].Type, n.ToString(), n, tokens[tokenCounter].Line));
+                                                }
+                                                else if (tokens[tokenCounter].Type == TokenType.FLOAT_LIT)
+                                                {
+                                                    m = (double)tokens[tokenCounter].Literal;
+                                                    m *= -1;
+                                                    infixTokens.Add(new Tokens(tokens[tokenCounter].Type, m.ToString(), m, tokens[tokenCounter].Line));
+                                                }
+                                            }
+                                        }
+                                        // b = a * -4, identified unary. most unary operators are found between operator and identifier.
+                                        else if((tokens[tokenCounter].Type == TokenType.SUBT || tokens[tokenCounter].Type == TokenType.ADD)
+                                            && isOperator(tokens[tokenCounter-1].Lexeme[0]) 
+                                            && ((tokens[tokenCounter + 1].Type == TokenType.FLOAT_LIT || tokens[tokenCounter + 1].Type == TokenType.INT_LIT)))
+                                        {
+                                            if(tokens[tokenCounter].Type == TokenType.SUBT)
+                                            {
+                                                tokenCounter++; // points to the literal
+                                                if (tokens[tokenCounter].Type == TokenType.INT_LIT)
+                                                {
+                                                    n = (int)tokens[tokenCounter].Literal;
+                                                    n *= -1;
+                                                    infixTokens.Add(new Tokens(tokens[tokenCounter].Type, n.ToString(), n, tokens[tokenCounter].Line));
+                                                }
+                                                else if(tokens[tokenCounter].Type == TokenType.FLOAT_LIT)
+                                                {
+                                                    m = (double)tokens[tokenCounter].Literal;
+                                                    m *= -1;
+                                                    infixTokens.Add(new Tokens(tokens[tokenCounter].Type, m.ToString(), m, tokens[tokenCounter].Line));
+                                                }
+                                            }
+                                        }
+                                        // not - boolean unaryy.. NOT (A) and NOT A are both accepted
+                                        // condition is not yet correct
+                                        else if (tokens[tokenCounter].Type == TokenType.NOT && 
+                                            (tokens[tokenCounter + 1].Type == TokenType.IDENTIFIER || tokens[tokenCounter + 1].Type == TokenType.BOOL_LIT))
+                                        {
+
+                                        }
+                                        else if(tokens[tokenCounter].Type == TokenType.IDENTIFIER)
+                                        { // check identifier if declared
+                                            string temp_ident2 = tokens[tokenCounter].Lexeme;
+                                            if (outputMap.ContainsKey(temp_ident2))
+                                                infixTokens.Add(tokens[tokenCounter]);
+                                            else
+                                                errorMessages.Add("Alien identifier at line " + tokens[tokenCounter].Line + 1);
+                                        }
+                                        else
+                                            infixTokens.Add(tokens[tokenCounter]);
+
+                                        if (isFirst)// this is just used for identifying unary as the first element. like A = -4 + 6
+                                            isFirst = false;
+                                        tokenCounter++;
+                                    }
+                                    Console.WriteLine("INFIX: ");
+                                    for (int i = 0; i < infixTokens.Count; i++)
+                                        Console.WriteLine(infixTokens[i].Type + ", " + infixTokens[i].Lexeme + ", " + infixTokens[i].Literal);
+                                    Console.WriteLine("END INFIX");
+
+                                    if (infixTokens.Count != 0)
+                                    {
+                                        // expects arithmetic/binary expression
+                                        if (outputMap[temp_ident].GetType() == typeof(int) || outputMap[temp_ident].GetType() == typeof(double))
+                                        {
+                                            operation = new Operations(infixTokens, errorMessages, outputMap);
+                                            postfix = operation.infixToPostFix();
+                                            if (outputMap[temp_ident].GetType() == typeof(int))
+                                            {
+                                                int res = operation.evaluateIntegerExpression(postfix);
+                                                outputMap[temp_ident] = res;
+                                            }
+                                            else
+                                            {
+                                                double d_res = operation.evaluateFloatExpression(postfix);
+                                                outputMap[temp_ident] = d_res;
+                                            }
+                                            infixTokens.Clear();
+                                        }
+                                        // expects boolean expression
+                                        else if (outputMap[temp_ident].GetType() == typeof(bool))
+                                        {
+
+                                            infixTokens.Clear();
+                                        }
+                                        // expects char expression. A = 'x'
+                                        else if (outputMap[temp_ident].GetType() == typeof(char))
+                                        {
+                                            char t = infixTokens[0].Lexeme[0];
+                                            outputMap[temp_ident] = t;
+                                            infixTokens.Clear();
+                                        }
+                                        else
+                                            errorMessages.Add(string.Format("Unidentified type at line " + tokens[tokenCounter].Line + 1));
+                                    }
+                                    else // infix tokens is empty
+                                        errorMessages.Add(string.Format("Invalid expression at line " + tokens[tokenCounter - 1].Line + 1));
+                                }
+                                else
+                                    errorMessages.Add(string.Format("Expected '=' after identifier at line " + tokens[tokenCounter].Line + 1));
+                            }
+                            else
+                                errorMessages.Add(string.Format("{0} identifier not declared ", temp_ident + "at line " + tokens[tokenCounter].Line + 1));
+                        }
+                        else
+                        // if !foundStart, or for variable declaration
+                        {
+                            tokenCounter++;
+                            ParseIdentifier(temp_ident);
+                        }
                         break;
                     case TokenType.SUBT: // for pre decrement
                         if (foundStart)
