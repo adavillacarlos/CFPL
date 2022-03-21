@@ -377,7 +377,7 @@ namespace CFPL
 
         private bool isOperator(char v)
         {
-            return operation.isOperator(v); 
+            return (v == '+' || v == '-' || v == '*' || v == '/' || v == '%');
         }
 
         /* 
