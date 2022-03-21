@@ -573,6 +573,7 @@ namespace CFPL
                     {
                         case TokenType.IDENTIFIER:
                             temp_identOut = tokens[tokenCounter2].Lexeme;
+                            Console.WriteLine(temp_identOut); 
                             if (outputMap.ContainsKey(temp_identOut)) //checks if the identifier is inside the final outputMap
                             {
                                 output = outputMap[temp_identOut].ToString();
@@ -791,12 +792,16 @@ namespace CFPL
         {
             if (tokens[tokenCounter].Type == TokenType.IDENTIFIER)
             {
+
                 varDeclareList.Add(tokens[tokenCounter].Lexeme); //Add the variable to the variable List
-                //temp_ident= tokens[tokenCounter].Lexeme; //get the variable name 
+                                                                 //temp_ident= tokens[tokenCounter].Lexeme; //get the variable name
                 tokenCounter++;
+
                 ParseEqual();
+
                 if (tokens[tokenCounter].Type == TokenType.COMMA)
                 {
+
                     ParseCommas();
                 }
             }
@@ -848,6 +853,7 @@ namespace CFPL
         {
             if (tokens[tokenCounter].Type == TokenType.EQUALS) //if the value is going to get declaredVariables as well
             {
+                
                 temp_ident = tokens[tokenCounter - 1].Lexeme;
                 tokenCounter++;
                 switch (tokens[tokenCounter].Type) //Check what type
@@ -864,6 +870,14 @@ namespace CFPL
                     case TokenType.BOOL_LIT: //Not yet working have to fix the declaration of TRUE and FALSE 
                         declaredVariables.Add(temp_ident, (string)(tokens[tokenCounter].Literal));
                         tokenCounter++;
+                        if(tokens[tokenCounter].Type == TokenType.DOUBLE_QUOTE)
+                        {
+                            tokenCounter++; 
+                        } else
+                        {
+                            msg = "Missing double quotes at line " + ((tokens[tokenCounter].Line + 1));
+                            errorMessages.Add(msg);
+                        }
                         break;
                     case TokenType.FLOAT_LIT:
                         //save the variable together with its value 
