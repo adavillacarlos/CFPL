@@ -94,7 +94,6 @@ namespace CFPL
                         }
                         break;
                     case TokenType.VAR:
-                        //result = fsm.Declaration(tokens, tokenCounter);
                         if (foundStart)
                         {
                             msg = "Invalid variable declaration due to START at line " + (tokens[tokenCounter].Line + 1);
@@ -103,15 +102,6 @@ namespace CFPL
                             tokenCounter++;
                             break;
                         }
-                        /*
-                        else if (result == 0)
-                        {
-                            msg = "Error in the declaration at line " + (tokens[tokenCounter].Line + 1);
-                            Console.WriteLine(msg);
-                            errorMessages.Add(msg);
-                            tokenCounter++;
-                            break;
-                        }*/
                         else
                         {
                             tokenCounter++; //iterate to get the variable name
@@ -249,10 +239,10 @@ namespace CFPL
                                                         Console.WriteLine(infixTokens.Count);
                                                     }
                                                     else
-                                                        errorMessages.Add("Invalid identifier type at line " + tokens[tokenCounter].Line + 1);
+                                                        errorMessages.Add("Invalid identifier type at line " + (tokens[tokenCounter].Line + 1));
                                                 }
                                                 else
-                                                    errorMessages.Add("Alien identifier at line " + tokens[tokenCounter].Line + 1);
+                                                    errorMessages.Add("Alien identifier at line " + (tokens[tokenCounter].Line + 1));
                                                 if (open)
                                                     tokenCounter++;
                                             }
@@ -352,6 +342,7 @@ namespace CFPL
                         else
                         { // if !foundStart, or for variable declaration
                             tokenCounter++;
+                            Console.WriteLine("Hello"); 
                             ParseIdentifier(temp_ident);
                         }
                         break;
@@ -372,19 +363,9 @@ namespace CFPL
 
                         break;
                     case TokenType.INPUT:
-                        // result = fsm.Input(tokens, tokenCounter);
-                        if (result == 1)
-                        {
-                            tokenCounter++;
-                            ParseInput();
-                        }
-                        else
-                        {
-                            msg = "Syntax Error. There is something wrong with INPUT at line " + (tokens[tokenCounter].Line + 1);
-                            errorMessages.Add(msg);
-                            Console.WriteLine(msg);
-                            tokenCounter++;
-                        }
+                         tokenCounter++;
+                         ParseInput();
+                        
                         break;
                     case TokenType.INT_LIT:
                         temp = (int)tokens[tokenCounter].Literal; //have to check if everything is valid as well

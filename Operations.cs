@@ -53,7 +53,7 @@ namespace CFPL
                 }
                 else
                 {
-                    errorMessages.Add(string.Format("Invalid equation at line" + infixTokens[ctr].Line + 1));
+                    errorMessages.Add(string.Format("Invalid equation at line" + (infixTokens[ctr].Line + 1)));
                     break;
                 }
                 ctr++;
@@ -99,7 +99,7 @@ namespace CFPL
                 }
                 else
                 {
-                    errorMessages.Add(string.Format("Invalid equation at line" + infixTokens[ctr].Line + 1));
+                    errorMessages.Add(string.Format("Invalid equation at line" + (infixTokens[ctr].Line + 1)));
                     break;
                 }
                 ctr++;
