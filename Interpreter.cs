@@ -193,12 +193,60 @@ namespace CFPL
                                                 }
                                             }
                                         }
-                                        // not - boolean unaryy.. NOT (A) and NOT A are both accepted
-                                        // condition is not yet correct
-                                        else if (tokens[tokenCounter].Type == TokenType.NOT && 
-                                            (tokens[tokenCounter + 1].Type == TokenType.IDENTIFIER || tokens[tokenCounter + 1].Type == TokenType.BOOL_LIT))
+                                       // the NOT token will not be added into the infixTokens list.
+                                        else if (tokens[tokenCounter].Type == TokenType.NOT)
                                         {
-
+                                            bool logic, open, close ;
+                                            open = close = false;
+                                            tokenCounter++;
+                                            if(tokens[tokenCounter].Type == TokenType.LEFT_PAREN)
+                                            {
+                                                open = true;
+                                                tokenCounter++;
+                                            }
+                                            if (tokens[tokenCounter].Type == TokenType.IDENTIFIER)
+                                            {// check if identifier is declared, and is of type string
+                                                string temp_ident2 = tokens[tokenCounter].Lexeme;
+                                                if (outputMap.ContainsKey(temp_ident2))
+                                                {
+                                                    if (outputMap[temp_ident2].GetType() == typeof(string))
+                                                    {
+                                                        logic = Convert.ToBoolean(outputMap[temp_ident2]);
+                                                        logic = !logic;
+                                                        // Even though this is an identifier, the TokenType should be bool_lit, 
+                                                        // bcs temp_ident2's  value is not inverted, and temp_ident2 has no Tokens.Literal value
+                                                        infixTokens.Add(new Tokens(TokenType.BOOL_LIT, logic.ToString(), logic.ToString(), tokens[tokenCounter].Line));
+                                                        Console.WriteLine(infixTokens.Count);
+                                                    }
+                                                    else 
+                                                        errorMessages.Add("Invalid identifier type at line " + tokens[tokenCounter].Line +1);
+                                                }
+                                                else
+                                                    errorMessages.Add("Alien identifier at line " + tokens[tokenCounter].Line + 1);
+                                                if (open)
+                                                    tokenCounter++;
+                                            }
+                                            else if (tokens[tokenCounter].Type == TokenType.BOOL_LIT)
+                                            {
+                                                logic = bool.Parse(tokens[tokenCounter].Lexeme);
+                                                logic = !logic;
+                                                Console.WriteLine("BOOLEAN FIRST!!!");
+                                                infixTokens.Add(new Tokens(tokens[tokenCounter].Type, logic.ToString(), logic.ToString(), tokens[tokenCounter].Line));
+                                                Console.WriteLine("OPEN " + open);
+                                                if(open)
+                                                    tokenCounter++;
+                                            }
+                                            else // NOT 5
+                                                errorMessages.Add(string.Format("Invalid expression after NOT at line " + tokens[tokenCounter].Line + 1));
+                                            if(tokens[tokenCounter].Type == TokenType.RIGHT_PAREN)
+                                            {
+                                                if (open)
+                                                    close = true;
+                                                else
+                                                    errorMessages.Add(string.Format("Invalid usage of right parenthesis at line " + tokens[tokenCounter].Line + 1));
+                                            }
+                                            if(open && !close)
+                                                errorMessages.Add(string.Format("Expected right parenthesis at line " + tokens[tokenCounter].Line + 1));
                                         }
                                         else if(tokens[tokenCounter].Type == TokenType.IDENTIFIER)
                                         { // check identifier if declared
