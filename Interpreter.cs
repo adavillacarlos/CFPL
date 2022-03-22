@@ -915,6 +915,7 @@ namespace CFPL
                         declaredVariables.Add(temp_ident, Convert.ToChar(tokens[tokenCounter].Literal));
                         tokenCounter++;
                         break;
+                        /*
                     case TokenType.BOOL_LIT: //Not yet working have to fix the declaration of TRUE and FALSE 
                         declaredVariables.Add(temp_ident, (string)(tokens[tokenCounter].Literal));
                         tokenCounter++;
@@ -926,6 +927,28 @@ namespace CFPL
                             msg = "Missing double quotes at line " + ((tokens[tokenCounter].Line + 1));
                             errorMessages.Add(msg);
                         }
+                        break;
+                        */
+                    case TokenType.DOUBLE_QUOTE:
+                        tokenCounter++;
+                        if (tokens[tokenCounter].Type == TokenType.BOOL_LIT)
+                        {
+                            string temp2 = tokens[tokenCounter].Lexeme;
+                            tokenCounter++;
+                            if (tokens[tokenCounter].Type == TokenType.DOUBLE_QUOTE)
+                            {
+                                declaredVariables.Add(temp_ident, temp2);
+                                tokens[tokenCounter - 1].Literal = temp2;
+                                tokenCounter++;
+                            }
+                            else
+                            {
+                                msg = "Missing double quotes at line " + ((tokens[tokenCounter].Line + 1));
+                                errorMessages.Add(msg);
+                            }
+                        }
+                        else
+                            errorMessages.Add(string.Format("Invalid variable declaration at line " + tokens[tokenCounter].Line + 1)); ;
                         break;
                     case TokenType.FLOAT_LIT:
                         //save the variable together with its value 
