@@ -92,18 +92,18 @@ namespace CFPL
                         charCounter++;
                         break;
                     case '"':
-                        if ((getNextChar() == 'F' || getNextChar() == 'T'))
+                        /*if ((getNextChar() == 'F' || getNextChar() == 'T'))
                         {
                             charCounter++;
                             char b = currString[charCounter];
                             BooleanVal(b);
                         }
                         else
-                        {
+                        {*/
                             item = new Tokens(TokenType.DOUBLE_QUOTE, x.ToString(), null, line);
                             tokens.Add(item);
                             charCounter++;
-                        }
+                        //}
                         break;
                     case ' ':
                         charCounter++;
@@ -164,6 +164,11 @@ namespace CFPL
                             tokens.Add(new Tokens(TokenType.LESSER_EQUAL, temp, null, line));
                             charCounter += 2;
                         }
+                         else if(getNextChar() == '>')
+                        {
+                            tokens.Add(new Tokens(TokenType.NOT_EQUAL, "<>", null, line));
+                            charCounter += 2;
+                        }
                         else
                         {
                             tokens.Add(new Tokens(TokenType.LESSER, x.ToString(), null, line));
@@ -195,7 +200,6 @@ namespace CFPL
                         {
                             isType(x);
                             break;
-
                         }
                         else if (isAlpha(x))
                         {
@@ -217,7 +221,7 @@ namespace CFPL
             
             }
         }
-
+/*
         private void BooleanVal(char a)
         {
             var t = TokenType.BOOL_LIT;
@@ -252,7 +256,7 @@ namespace CFPL
             }
 
         }
-
+*/
         private bool isBoolean(char b)
         {
             return ((b >= 'A' && b <= 'Z'));
@@ -361,10 +365,11 @@ namespace CFPL
                     }
                     break;
                 case "IF":
-
                     item = new Tokens(TokenType.IF, temp, null, line);
                     tokens.Add(item);
-
+                    break;
+                case "WHILE":
+                    tokens.Add(new Tokens(TokenType.WHILE, temp, null, line));
                     break;
                 case "ELSE":
                     item = new Tokens(TokenType.ELSE, temp, null, line);
@@ -373,7 +378,6 @@ namespace CFPL
                 case "ELIF":
                     item = new Tokens(TokenType.ELIF, temp, null, line);
                     tokens.Add(item);
-
                     break;
                 case "AND":
                     tokens.Add(new Tokens(TokenType.AND, temp, null, line));
@@ -385,13 +389,12 @@ namespace CFPL
                     tokens.Add(new Tokens(TokenType.NOT, temp, null, line));
                     break;
                 case "TRUE":
-                    tokens.Add(new Tokens(TokenType.TRUE, temp, null, line));
-                    break;
-                case "WHILE":
-                    tokens.Add(new Tokens(TokenType.WHILE, temp, null, line));
+                    temp = "True";
+                    tokens.Add(new Tokens(TokenType.BOOL_LIT, temp, null, line));
                     break;
                 case "FALSE":
-                    tokens.Add(new Tokens(TokenType.FALSE, temp, null, line));
+                    temp = "False";
+                    tokens.Add(new Tokens(TokenType.BOOL_LIT, temp, null, line));
                     break;
                 default:
                     item = new Tokens(TokenType.IDENTIFIER, temp, null, line);
