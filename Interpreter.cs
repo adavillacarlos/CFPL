@@ -290,7 +290,16 @@ namespace CFPL
                                         // expects boolean expression
                                         else if (outputMap[temp_ident].GetType() == typeof(bool))
                                         {
-
+                                            operation = new Operations(infixTokens, errorMessages, outputMap);
+                                            postfix = operation.logicInfixToPostFix();
+                                            Console.WriteLine("POST FIX:");
+                                            foreach(Tokens x in postfix)
+                                            {
+                                                Console.WriteLine(x.Type + ", " + x.Lexeme + ", " + x.Literal);
+                                            }
+                                            Console.WriteLine("END POST FIX");
+                                            bool b = operation.evaluateBooleanExpression(postfix);
+                                            outputMap[temp_ident] = b;
                                             infixTokens.Clear();
                                         }
                                         // expects char expression. A = 'x'
