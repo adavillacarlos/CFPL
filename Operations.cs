@@ -11,7 +11,7 @@ namespace CFPL
         private List<Tokens> infixTokens;
         private List<string> errorMessages;
         private Dictionary<string, object> variables;
-
+        private List<string> forMultipleIden = new List<string>();
         public Operations(List<Tokens> tokens, List<string> error, Dictionary<string, object> var)
         {
             this.infixTokens = new List<Tokens>(tokens);
@@ -19,51 +19,7 @@ namespace CFPL
             this.variables = new Dictionary<string, object>(var);
         }
         public List<string> ErrorMessages { get { return errorMessages; } }
-        public List<Tokens> infixToPostFix()
-        {
-            int ctr = 0, len = infixTokens.Count;
-            List<Tokens> postfix = new List<Tokens>();
-            Stack<Tokens> stack = new Stack<Tokens>();
-            
-            while (ctr < len)
-            {
-                if (infixTokens[ctr].Lexeme[0] == '(')
-                    stack.Push(infixTokens[ctr]);
-                else if (infixTokens[ctr].Type == TokenType.IDENTIFIER || infixTokens[ctr].Type == TokenType.FLOAT_LIT
-                || infixTokens[ctr].Type == TokenType.INT_LIT)
-                {
-                    postfix.Add(infixTokens[ctr]);
-                }
-                else if (isOperator(infixTokens[ctr].Lexeme[0]))
-                {
-                    // check precedence of the scanned operator and the stacked operator
-                    while (stack.Count != 0 && isOperator(infixTokens[ctr].Lexeme[0]) && (getPrecedence(infixTokens[ctr].Lexeme) <= getPrecedence(stack.Peek().Lexeme)))
-                        postfix.Add(stack.Pop());
-                    
-                    stack.Push(infixTokens[ctr]);
-                }
-                else if (infixTokens[ctr].Lexeme[0] == ')')
-                {
-                    while (stack.Peek().Type != TokenType.LEFT_PAREN)
-                    {
-                        postfix.Add(stack.Pop());
-                    }
-                    if (stack.Peek().Type == TokenType.LEFT_PAREN)
-                        stack.Pop();
-                }
-                else
-                {
-                    errorMessages.Add(string.Format("Invalid equation at line" + (infixTokens[ctr].Line + 1)));
-                    break;
-                }
-                ctr++;
-            }
-            while (stack.Count != 0)
-            {
-                postfix.Add(stack.Pop());
-            }
-            return postfix;
-        }
+        public List<string> multipleIden { get { return forMultipleIden; } }
         public List<Tokens> logicInfixToPostFix()
         {
             int ctr = 0, len = infixTokens.Count;
@@ -75,7 +31,8 @@ namespace CFPL
                 if (infixTokens[ctr].Lexeme[0] == '(')
                     stack.Push(infixTokens[ctr]);
                 else if (infixTokens[ctr].Type == TokenType.IDENTIFIER || infixTokens[ctr].Type == TokenType.FLOAT_LIT
-                || infixTokens[ctr].Type == TokenType.INT_LIT || infixTokens[ctr].Type == TokenType.BOOL_LIT)
+                || infixTokens[ctr].Type == TokenType.INT_LIT || infixTokens[ctr].Type == TokenType.BOOL_LIT
+                || infixTokens[ctr].Type == TokenType.EQUALS || infixTokens[ctr].Type == TokenType.CHAR_LIT)
                 {
                     postfix.Add(infixTokens[ctr]);
                 }
@@ -106,15 +63,17 @@ namespace CFPL
             }
             while (stack.Count != 0)
                 postfix.Add(stack.Pop());
-            
+
             return postfix;
         }
-        public bool evaluateBooleanExpression(List<Tokens> postfix)
+        public string evaluateExpression(List<Tokens> postfix)
         {
+
             bool flag = false;
             Stack<string> stack = new Stack<string>();
             List<string> postfixValues = new List<string>();
-            int ctr = 0, res=0, len = postfix.Count;
+            int ctr = 0, len = postfix.Count;
+            double res = 0;
             string val;
             Console.WriteLine("VAR COUNT " + variables.Count);
             foreach (KeyValuePair<string, object> x in variables)
@@ -127,17 +86,17 @@ namespace CFPL
                     val = Convert.ToString(variables[postfix[ctr].Lexeme]);
                     postfixValues.Add(val);
                 }
-                else if (postfix[ctr].Type == TokenType.FLOAT_LIT || postfix[ctr].Type == TokenType.INT_LIT 
-                    || postfix[ctr].Type == TokenType.BOOL_LIT)
+                else if (postfix[ctr].Type == TokenType.FLOAT_LIT || postfix[ctr].Type == TokenType.INT_LIT
+                    || postfix[ctr].Type == TokenType.BOOL_LIT || postfix[ctr].Type == TokenType.CHAR_LIT)
                 {
                     val = postfix[ctr].Lexeme;
                     postfixValues.Add(val.ToString());
                 }
-                else if (isLogicOperator(postfix[ctr].Lexeme))
+                else if (isLogicOperator(postfix[ctr].Lexeme) || postfix[ctr].Type == TokenType.EQUALS)
                     postfixValues.Add(postfix[ctr].Lexeme);
                 else
                 {
-                    errorMessages.Add(string.Format("Invalid infix expression at line" + infixTokens[ctr].Line + 1));
+                    errorMessages.Add(string.Format("Invalid infix expression at line" + (infixTokens[ctr].Line + 1)));
                     break;
                 }
                 ctr++;
@@ -146,8 +105,20 @@ namespace CFPL
             // postfix Values now contains a string of float_lit, int_lit, bool_lit, and operators
             while (ctr < len)
             {
-                if (postfix[ctr].Type == TokenType.INT_LIT || postfix[ctr].Type == TokenType.FLOAT_LIT
-                || postfix[ctr].Type == TokenType.IDENTIFIER || postfix[ctr].Type == TokenType.BOOL_LIT)
+                if (postfix[ctr].Type == TokenType.IDENTIFIER && postfix[ctr + 1].Type == TokenType.EQUALS)
+                {
+                    Console.WriteLine("MULTIPLE IDEN");
+                    while (ctr != postfixValues.Count - 1)
+                    {
+                        // B = C = D = 1
+                        forMultipleIden.Add(postfix[ctr].Lexeme);
+                        ctr += 2;
+                    }
+                    stack.Push(postfixValues[ctr]);
+                }
+                else if (postfix[ctr].Type == TokenType.INT_LIT || postfix[ctr].Type == TokenType.FLOAT_LIT
+                || postfix[ctr].Type == TokenType.IDENTIFIER || postfix[ctr].Type == TokenType.BOOL_LIT
+                || postfix[ctr].Type == TokenType.CHAR_LIT)
                 {
                     Console.WriteLine("Pushed " + postfix[ctr].Lexeme + ", " + postfix[ctr].Literal + " to the stack");
                     stack.Push(postfixValues[ctr]);
@@ -158,8 +129,8 @@ namespace CFPL
                     string i2 = stack.Pop();
                     if (isOperator(postfixValues[ctr][0]))
                     {
-                        int n1 = int.Parse(i1);
-                        int n2 = int.Parse(i2);
+                        double n1 = double.Parse(i1);
+                        double n2 = double.Parse(i2);
                         if (postfixValues[ctr] == "+")
                             res = n2 + n1;
                         else if (postfixValues[ctr] == "-")
@@ -204,155 +175,28 @@ namespace CFPL
                     }
                     else
                         Console.Write("ELSE ASDASD");
-                    
+
                 }
                 ctr++;
             }
             Console.WriteLine("STACK COUNT " + stack.Count());
-            if(stack.Count != 0)
+            if (stack.Count != 0)
             {
                 Console.WriteLine("STACK POPPED");
-                Console.WriteLine("STRING "+ stack.Peek().ToString().ToLower());
-                flag = bool.Parse(stack.Pop().ToString().ToLower());
+                Console.WriteLine("STRING " + stack.Peek().ToString().ToLower());
             }
-            return flag;
+            return stack.Pop();
         }
-        public int evaluateIntegerExpression(List<Tokens> postfix)
+        public bool isDigit(string x)
         {
-            int res = 0;
-            Stack<int> stack = new Stack<int>();
-            List<string> postfixValues = new List<string>();
-            int ctr = 0, val;
-            int len = postfix.Count;
-            //copying
-            while (ctr < len)
-            {
-                if (postfix[ctr].Type == TokenType.IDENTIFIER)
-                {
-                    val = (int)variables[postfix[ctr].Lexeme];
-                    postfixValues.Add(val.ToString());
-                }
-                else if (postfix[ctr].Type == TokenType.FLOAT_LIT || postfix[ctr].Type == TokenType.INT_LIT)
-                {
-                    val = int.Parse(postfix[ctr].Lexeme);
-                    postfixValues.Add(val.ToString());
-                }
-                else if (isOperator(postfix[ctr].Lexeme[0]))
-                    postfixValues.Add(postfix[ctr].Lexeme);
-                else
-                {
-                    errorMessages.Add(string.Format("Invalid equation at line" + infixTokens[ctr].Line + 1));
-                    break;
-                }
-                ctr++;
-            }
-            ctr = 0;
-            // postfix Values now contains a string of int literals and operators
-            while (ctr < len)
-            {
-                if (postfix[ctr].Type == TokenType.INT_LIT || postfix[ctr].Type == TokenType.FLOAT_LIT
-                || postfix[ctr].Type == TokenType.IDENTIFIER)
-                {
-                    stack.Push(int.Parse(postfixValues[ctr]));
-                }
-                else if (isOperator(postfixValues[ctr][0]))
-                {
-                    int n1 = (int)stack.Pop();
-                    int n2 = (int)stack.Pop();
-                    if (postfixValues[ctr] == "+")
-                        res = n2 + n1;
-                    if (postfixValues[ctr] == "-")
-                        res = n2 - n1;
-                    if (postfixValues[ctr] == "*")
-                        res = n2 * n1;
-                    if (postfixValues[ctr] == "/")
-                        res = n2 / n1;
-                    if (postfixValues[ctr] == "%")
-                        res = n2 % n1;
-
-                    stack.Push(res);
-                }
-                ctr++;
-            }
-            res = (int)stack.Pop();
-            return res;
+            int i = int.Parse(x);
+            return (i >= 0 || i < 0);
         }
-        // public char evaluateCharPostfix(List<Tokens> postfix)
-        //{
-
-        //}
-        public double evaluateFloatExpression(List<Tokens> postfix)
-        {
-            double res = 0.0, val;
-            Stack<double> stack = new Stack<double>();
-            List<string> postfixValues = new List<string>();
-            int ctr = 0;
-            int len = postfix.Count;
-            //copying
-            while (ctr < len)
-            {
-                if (postfix[ctr].Type == TokenType.IDENTIFIER)
-                {
-                    val = (double)variables[postfix[ctr].Lexeme];
-                    postfixValues.Add(val.ToString());
-                }
-                else if (postfix[ctr].Type == TokenType.FLOAT_LIT || postfix[ctr].Type == TokenType.INT_LIT)
-                {
-                    val = double.Parse(postfix[ctr].Lexeme);
-                    postfixValues.Add(val.ToString());
-                }
-                else if (isOperator(postfix[ctr].Lexeme[0]))
-                    postfixValues.Add(postfix[ctr].Lexeme);
-                else
-                {
-                    errorMessages.Add(string.Format("Invalid equation at line" + infixTokens[ctr].Line + 1));
-                    break;
-                }
-                ctr++;
-            }
-            ctr = 0;
-            // postfix Values now contains a string of float literals and operators
-            while (ctr < len)
-            {
-                if (postfix[ctr].Type == TokenType.INT_LIT || postfix[ctr].Type == TokenType.FLOAT_LIT
-                || postfix[ctr].Type == TokenType.IDENTIFIER)
-                {
-                    stack.Push(Convert.ToDouble(postfixValues[ctr]));
-                }
-                else if (isOperator(postfixValues[ctr][0]))
-                {
-                    double n1 = Convert.ToDouble(stack.Pop());
-                    double n2 = Convert.ToDouble(stack.Pop());
-                    if (postfixValues[ctr] == "+")
-                        res = n2 + n1;
-                    if (postfixValues[ctr] == "-")
-                        res = n2 - n1;
-                    if (postfixValues[ctr] == "*")
-                        res = n2 * n1;
-                    if (postfixValues[ctr] == "/")
-                        res = n2 / n1;
-                    if (postfixValues[ctr] == "%")
-                        res = n2 % n1;
-
-                    stack.Push(res);
-                }
-                ctr++;
-            }
-            res = (double)stack.Pop();
-            return res;
-        }
-        /*
-         public bool evaluateBooleanExpression(List<Tokens> postfix)
-        {
-
-        }
-        */
-
         public bool isOperator(char x) // for binary only
         {
             return (x == '+' || x == '-' || x == '*' || x == '/' || x == '%');
         }
-        public bool isLogicOperator(string x) 
+        public bool isLogicOperator(string x)
         {
             return (x == "+" || x == "-" || x == "*" || x == "/" || x == "%" || x == "AND" || x == "OR" || x == "<"
                  || x == "<=" || x == "==" || x == "<>" || x == ">" || x == ">=");
@@ -365,7 +209,7 @@ namespace CFPL
         {
             return x == "AND" || x == "OR";
         }
-        public int getPrecedence(string symbol) 
+        public int getPrecedence(string symbol)
         {
             if (symbol == "*" || symbol == "/" || symbol == "%") // highest precedence
                 return 4;
