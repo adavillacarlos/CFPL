@@ -19,8 +19,8 @@ namespace CFPL
         List<string> varDeclareList = new List<string>();
         private static Dictionary<string, object> outputMap;
         Dictionary<string, object> declaredVariables = new Dictionary<string, object>();
-        private int startCount = 0;
-        private int stopCount;
+        private int startCount = 0, ifCount=0;
+        private int stopCount=0;
         private bool foundStop;
         string temp_ident = "";
         string msg = "";
@@ -30,6 +30,11 @@ namespace CFPL
         Operations operation;
         //FSM fsm;
         List<String> inputVariables = new List<string>();
+        private int startLine, stopLine, flagIf=0;
+        private int ifStart=0,ifStop=0; 
+        private bool errorFound;
+        List<Tokens> postfix = new List<Tokens>();
+        private int nested;
 
         public Interpreter(List<Tokens> t, string input)
         {
@@ -103,21 +108,28 @@ namespace CFPL
                         break;
                     case TokenType.START:
                         startCount++;
+                        startLine = (tokens[tokenCounter].Line + 1);
+                     
                         if (!foundStart)
                             foundStart = true;
                         else
                         {
                             msg = "Syntax Error. Incorrect usage of START at line " + (tokens[tokenCounter].Line + 1);
                             errorMessages.Add(msg);
-                            return 1;
                         }
                         tokenCounter++;
                         break;
                     case TokenType.STOP:
                         stopCount++;
-                        if (tokens[tokenCounter - 1].Line != tokens[tokenCounter].Line && !foundStop && foundStart)
+                        stopLine = (tokens[tokenCounter].Line + 1);
+                        Console.WriteLine("If Count: " + ifCount);
+                        Console.WriteLine("Start Count: " + startCount);
+                        Console.WriteLine("Stop Count: " + stopCount);
+
+                        if ((startLine!=stopLine) && foundStart) //Bug on IF() Start only 
                         {
                             foundStop = true;
+                           
                         }
                         else
                         {
@@ -132,13 +144,12 @@ namespace CFPL
                         tokenCounter++;
                         if (foundStart)
                         {
-                            List<Tokens> postfix = new List<Tokens>();
                             if (outputMap.ContainsKey(temp_ident))
                             {
                                 if (tokens[tokenCounter].Type == TokenType.EQUALS)
                                 {
                                     tokenCounter++;
-                                    bool errorFound = getInfix();
+                                    errorFound = getInfix();
                                     if (errorFound) return 1;
                                     Console.WriteLine("\nINFIX EXPRESSION: ");
                                     foreach (Tokens x in infixTokens)
@@ -233,6 +244,87 @@ namespace CFPL
                     case TokenType.FLOAT_LIT:
                         temp = (double)tokens[tokenCounter].Literal;
                         tokenCounter++;
+                        break;
+                    case TokenType.IF:
+                        tokenCounter++;
+                        errorFound = getInfix();
+                        if (errorFound) return 1;
+                        if (infixTokens.Count != 0)
+                        {
+                            object obj = null;
+                            string output = null;
+                            operation = new Operations(infixTokens, errorMessages, outputMap);
+                            postfix = operation.logicInfixToPostFix();
+                            output = operation.evaluateExpression(postfix);
+                            infixTokens.Clear();
+                            if(tokens[tokenCounter].Type == TokenType.START)
+                            {
+                                startCount++; 
+                                ifStart++;
+                                tokenCounter++;
+                                int i = tokenCounter;
+                                
+                                if (output == "True")
+                                {
+                                    
+                                    flagIf = 1;
+                                    //To do if output is true 
+                                    Console.WriteLine(tokens[tokenCounter].Lexeme);
+                                    //Checking if STOP is there
+                                    while (i != tokens.Count)
+                                    {
+                                        if (tokens[i].Type == TokenType.STOP)
+                                        {
+                                            ifStop++;
+                                            stopCount++; 
+                                            break; 
+                                        }
+                                        i++;
+                                    }
+                                    
+                                } else
+                                {
+                                    flagIf = -1; 
+                                    //TO DO IF OUTPUT IS FALSE; skip the tokens until the next stop
+                                    while (tokenCounter != tokens.Count)
+                                    {
+                                        if(tokens[tokenCounter].Type == TokenType.STOP)
+                                        {
+                                            ifStop++;
+                                            stopCount++; 
+                                            break;
+                                        }
+                                        tokenCounter++; 
+                                    }
+                                }
+                                Console.WriteLine("Start Count: " + ifCount + " Stop Count: " + ifStop); 
+                              
+                            } else
+                            {
+                                errorMessages.Add(string.Format("Missing Start at " + (tokens[tokenCounter - 1].Line + 1)));
+                                return 1;
+                            }
+                            
+                        } else
+                        {
+                            errorMessages.Add(string.Format("Invalid expression at line " + (tokens[tokenCounter - 1].Line + 1)));
+                            return 1;
+                        }
+                        break;
+                    case TokenType.ELSE:
+                        if(flagIf == -1)
+                        {
+                            tokenCounter++;
+                            if(tokens[tokenCounter].Type == TokenType.START)
+                            {
+                                startCount++;
+                                tokenCounter++; 
+                            } else
+                            {
+                                errorMessages.Add(string.Format("Missing Start at Line: " + (tokens[tokenCounter - 1].Line + 1)));
+                                return 1;
+                            }
+                        }
                         break;
                     default:
                         tokenCounter++;
@@ -1034,8 +1126,8 @@ namespace CFPL
                         infixTokens.Add(tokens[tokenCounter]);
                     else
                     {
+                        errorMessages.Add("Alien identifier at line " + (tokens[tokenCounter].Line + 1));
                         return true;
-                        errorMessages.Add("Alien identifier at line " + tokens[tokenCounter].Line + 1);
                     }
 
                 }
