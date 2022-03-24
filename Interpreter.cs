@@ -216,6 +216,7 @@ namespace CFPL
                         {
                             tokenCounter++;
                             ParseOutput();
+                            Console.WriteLine("Inside Parse Output: "); 
                         }
                         else
                         {
@@ -333,6 +334,7 @@ namespace CFPL
                     case TokenType.WHILE:
                         tokenCounter++;
                         tokenCounter2 = tokenCounter;//GET THE STARTING FOR THE CONDITION
+                        Console.WriteLine("Hello While: " + tokens[tokenCounter2].Lexeme); 
                         errorFound = getInfix();
                         if (errorFound) return 1; 
                         if(infixTokens.Count != 0)
@@ -348,7 +350,7 @@ namespace CFPL
                                 whileStart = true;
                                 tokenCounter++;
 
-                                ParseWhile(); 
+                                ParseWhile(tokenCounter2, tokenCounter); 
                             } else
                             {
                                 errorMessages.Add(string.Format("Missing Start at Line: " + (tokens[tokenCounter - 1].Line + 1)));
@@ -375,30 +377,44 @@ namespace CFPL
             return errorMessages.Count;
         }
 
-        private void ParseWhile()
+        private void ParseWhile(int conditionToken, int afterStartToken)
         {
-            int startCounter = tokenCounter; 
-            int tokenCounter3 = tokenCounter; //after the start
-            Console.WriteLine("Start Counter: " + startCounter + "Token Counter: " + tokenCounter + "Statement Counter: " + tokenCounter2); 
+            //tokencounter2 holds the left param
+            int startCounter = tokenCounter; //TOKEN AFTER THE START
+            int origCounter = afterStartToken;  //holds the original counter
+            Console.WriteLine("Start Counter: " + startCounter + "Token Counter: " + tokenCounter + "Statement Counter: " + tokenCounter2);
 
             //tokenCounter 2 should not be changed since it is for the condition
             while (output == "True")
             {
-                Console.WriteLine("Output: " + output);
-                ParseInterpreterWhile(); //Like the Parse
 
-                tokenCounter = tokenCounter2; //to check the condition
+
+                //TOKENCOUNTER AFTER THE START 
+                Console.WriteLine("Lexeme: " + tokens[tokenCounter].Lexeme); 
+                ParseInterpreterWhile(); //Like the Parse
+                origCounter = tokenCounter; 
+
+                tokenCounter = conditionToken; //to check the condition
+                Console.WriteLine("Left Param: " + tokens[tokenCounter-1].Lexeme); //It should be the leexeme: 
+                
                 errorFound = getInfix();
                 if (errorFound) error = true; 
                 //Get the new condition once again. 
                 operation = new Operations(infixTokens, errorMessages, outputMap);
                 postfix = operation.logicInfixToPostFix();
                 output = operation.evaluateExpression(postfix);
+
                 infixTokens.Clear();
 
-                Console.WriteLine("Hello: "); 
-                tokenCounter = startCounter; //goes back to its original position
+                
+
+                tokenCounter = afterStartToken; //Should be on the start
+                Console.WriteLine("Original Counter after: " + tokens[tokenCounter].Lexeme);
+
             }
+            //Take the tokenCounter back to the stop
+            while (tokens[tokenCounter].Type != TokenType.STOP)
+                tokenCounter++; 
         }
 
         private void ParseInterpreterWhile()
@@ -406,6 +422,7 @@ namespace CFPL
             object temp; 
             while(tokens[tokenCounter].Type != TokenType.STOP)
             {
+                Console.WriteLine("Inside Parse Interpreter While: " + tokens[tokenCounter].Lexeme); 
                 switch (tokens[tokenCounter].Type)
                 {
                     case TokenType.MULT:
@@ -494,7 +511,7 @@ namespace CFPL
                         }
                         break;
                     case TokenType.OUTPUT:
-                        if (foundStart)
+                        if (whileStart)
                         {
                             tokenCounter++;
                             ParseOutput();
@@ -526,9 +543,120 @@ namespace CFPL
                         temp = (double)tokens[tokenCounter].Literal;
                         tokenCounter++;
                         break;
+                    case TokenType.IF:
+                        tokenCounter++;
+                        errorFound = getInfix();
+                        if (errorFound) error=true;
+                        if (infixTokens.Count != 0)
+                        {
+                            object obj = null;
+                            string output = null;
+                            operation = new Operations(infixTokens, errorMessages, outputMap);
+                            postfix = operation.logicInfixToPostFix();
+                            output = operation.evaluateExpression(postfix);
+                            infixTokens.Clear();
+                            if (tokens[tokenCounter].Type == TokenType.START)
+                            {
+                                startCount++;
+                                ifStart++;
+                                tokenCounter++;
+                                int i = tokenCounter;
+
+                                if (output == "True")
+                                {
+
+                                    flagIf = 1;
+                                    //To do if output is true 
+                                    Console.WriteLine(tokens[tokenCounter].Lexeme);
+                                    //Checking if STOP is there
+                                    while (i != tokens.Count)
+                                    {
+                                        if (tokens[i].Type == TokenType.STOP)
+                                        {
+                                            ifStop++;
+                                            stopCount++;
+                                            break;
+                                        }
+                                        i++;
+                                    }
+
+                                }
+                                else
+                                {
+                                    flagIf = -1;
+                                    //TO DO IF OUTPUT IS FALSE; skip the tokens until the next stop
+                                    while (tokenCounter != tokens.Count)
+                                    {
+                                        if (tokens[tokenCounter].Type == TokenType.STOP)
+                                        {
+                                            ifStop++;
+                                            stopCount++;
+                                            break;
+                                        }
+                                        tokenCounter++;
+                                    }
+                                }
+                                Console.WriteLine("Start Count: " + ifCount + " Stop Count: " + ifStop);
+
+                            }
+                            else
+                            {
+                                errorMessages.Add(string.Format("Missing Start at " + (tokens[tokenCounter - 1].Line + 1)));
+                                error = true; 
+                            }
+
+                        }
+                        else
+                        {
+                            errorMessages.Add(string.Format("Invalid expression at line " + (tokens[tokenCounter - 1].Line + 1)));
+                            error = true; 
+                        }
+                        break;
+                    case TokenType.ELSE:
+                        if (flagIf == -1)
+                        {
+                            tokenCounter++;
+                            if (tokens[tokenCounter].Type == TokenType.START)
+                            {
+                                startCount++;
+                                tokenCounter++;
+                            }
+                            else
+                            {
+                                errorMessages.Add(string.Format("Missing Start at Line: " + (tokens[tokenCounter - 1].Line + 1)));
+                                error = true; 
+                            }
+                        }
+                        break;
                     case TokenType.WHILE:
                         tokenCounter++;
-                        ParseWhile();
+                        tokenCounter2 = tokenCounter;//GET THE STARTING FOR THE CONDITION
+                        Console.WriteLine("Hello While: " + tokens[tokenCounter2].Lexeme);
+                        errorFound = getInfix();
+                        if (errorFound) error=true;
+                        if (infixTokens.Count != 0)
+                        {
+                            obj = null;
+                            output = null;
+                            operation = new Operations(infixTokens, errorMessages, outputMap);
+                            postfix = operation.logicInfixToPostFix();
+                            output = operation.evaluateExpression(postfix);
+                            infixTokens.Clear();
+                            if (tokens[tokenCounter].Type == TokenType.START)
+                            {
+                                whileStart = true;
+                                tokenCounter++;
+
+                                ParseWhile(tokenCounter2,tokenCounter);
+                            }
+                            else
+                            {
+                                errorMessages.Add(string.Format("Missing Start at Line: " + (tokens[tokenCounter - 1].Line + 1)));
+                                error = true; 
+                            }
+                        }
+                        if (error)
+                            break;
                         break;
                     default:
                         tokenCounter++;
