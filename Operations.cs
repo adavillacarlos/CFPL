@@ -20,6 +20,7 @@ namespace CFPL
         }
         public List<string> ErrorMessages { get { return errorMessages; } }
         public List<string> multipleIden { get { return forMultipleIden; } }
+
         public List<Tokens> logicInfixToPostFix()
         {
             int ctr = 0, len = infixTokens.Count;
@@ -63,7 +64,10 @@ namespace CFPL
             }
             while (stack.Count != 0)
                 postfix.Add(stack.Pop());
-
+            Console.WriteLine("\nPOSTFIX EXPRESSION: ");
+            foreach (Tokens x in postfix)
+                Console.WriteLine(x.Type + ", " + x.Lexeme);
+            Console.WriteLine("END OF POSTFIX");
             return postfix;
         }
         public string evaluateExpression(List<Tokens> postfix)
@@ -75,9 +79,9 @@ namespace CFPL
             int ctr = 0, len = postfix.Count;
             double res = 0;
             string val;
-            Console.WriteLine("VAR COUNT " + variables.Count);
-            foreach (KeyValuePair<string, object> x in variables)
-                Console.WriteLine(x.Key + ", " + x.Value);
+            //Console.WriteLine("VAR COUNT " + variables.Count);
+            //foreach (KeyValuePair<string, object> x in variables)
+            //    Console.WriteLine(x.Key + ", " + x.Value);
             //copying
             while (ctr < len)
             {
@@ -107,7 +111,6 @@ namespace CFPL
             {
                 if (postfix[ctr].Type == TokenType.IDENTIFIER && postfix[ctr + 1].Type == TokenType.EQUALS)
                 {
-                    Console.WriteLine("MULTIPLE IDEN");
                     while (ctr != postfixValues.Count - 1)
                     {
                         // B = C = D = 1
@@ -182,8 +185,7 @@ namespace CFPL
             Console.WriteLine("STACK COUNT " + stack.Count());
             if (stack.Count != 0)
             {
-                Console.WriteLine("STACK POPPED");
-                Console.WriteLine("STRING " + stack.Peek().ToString().ToLower());
+                Console.WriteLine("TO BE POPPED: STRING " + stack.Peek().ToString().ToLower());
             }
             return stack.Pop();
         }

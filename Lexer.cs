@@ -325,7 +325,7 @@ namespace CFPL
                         tokens.Add(new Tokens(TokenType.INT, temp, null, line));
                    else
                     {
-                        msg = "Invalid usage of reserved word INT at line " + line + 1;
+                        msg = "Invalid usage of reserved word INT at line " + (line + 1);
                         errorMessages.Add(msg);
                         Console.WriteLine(msg);
                     }
@@ -335,7 +335,7 @@ namespace CFPL
                         tokens.Add(new Tokens(TokenType.FLOAT, temp, null, line));
                     else
                     {
-                        msg = "Invalid usage of reserved word FLOAT at line " + line + 1;
+                        msg = "Invalid usage of reserved word FLOAT at line " + (line + 1);
                         errorMessages.Add(msg);
                         Console.WriteLine(msg);
                     }
@@ -359,7 +359,7 @@ namespace CFPL
                         tokens.Add(item);
                     } else
                     {
-                        msg = "Invalid usage of reserved word CHAR at line " + line + 1;
+                        msg = "Invalid usage of reserved word CHAR at line " + (line + 1);
                         errorMessages.Add(msg);
                         Console.WriteLine(msg);
                     }
