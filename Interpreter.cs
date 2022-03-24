@@ -1463,6 +1463,7 @@ namespace CFPL
                         errorMessages.Add(string.Format("Incorrect usage of bool literal at line " + (tokens[tokenCounter].Line + 1)));
                         return true;
                     }
+                   
 
                 }
                 else if (tokens[tokenCounter].Type == TokenType.DOUBLE_QUOTE)
