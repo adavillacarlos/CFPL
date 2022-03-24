@@ -28,7 +28,7 @@ namespace CFPL
         int result;
         string stringInput;
         string output;
-        object obj; 
+        object obj;
         Operations operation;
         //FSM fsm;
         List<String> inputVariables = new List<string>();
@@ -165,13 +165,50 @@ namespace CFPL
                                         output = operation.evaluateExpression(postfix);
 
                                         if (outputMap[temp_ident].GetType() == typeof(double))
-                                            obj = double.Parse(output);
+                                            try
+                                            {
+                                                obj = double.Parse(output);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                errorMessages.Add(string.Format("Data types does not match at line " + (tokens[tokenCounter].Line + 1)));
+                                                return 1;
+                                            }
+
                                         else if (outputMap[temp_ident].GetType() == typeof(int))
-                                            obj = int.Parse(output);
+
+                                            try
+                                            {
+                                                obj = int.Parse(output);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                errorMessages.Add(string.Format("Data types does not match at line  " + (tokens[tokenCounter].Line + 1)));
+                                                return 1;
+                                            }
                                         else if (outputMap[temp_ident].GetType() == typeof(string))
-                                            obj = bool.Parse(output);
+
+                                            try
+                                            {
+                                                obj = bool.Parse(output);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                errorMessages.Add(string.Format("Data types does not match at line " + (tokens[tokenCounter].Line + 1)));
+                                                return 1;
+                                            }
                                         else if (outputMap[temp_ident].GetType() == typeof(char))
-                                            obj = char.Parse(output);
+
+
+                                            try
+                                            {
+                                                obj = char.Parse(output);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                errorMessages.Add(string.Format("Data types does not match at line  " + (tokens[tokenCounter].Line + 1)));
+                                                return 1;
+                                            }
                                         else
                                         {
                                             errorMessages.Add(string.Format("Unidentified type at line " + (tokens[tokenCounter].Line + 1)));
@@ -216,7 +253,7 @@ namespace CFPL
                         {
                             tokenCounter++;
                             ParseOutput();
-                            Console.WriteLine("Inside Parse Output: "); 
+                            Console.WriteLine("Inside Parse Output: ");
                         }
                         else
                         {
@@ -334,10 +371,10 @@ namespace CFPL
                     case TokenType.WHILE:
                         tokenCounter++;
                         tokenCounter2 = tokenCounter;//GET THE STARTING FOR THE CONDITION
-                        Console.WriteLine("Hello While: " + tokens[tokenCounter2].Lexeme); 
+                        Console.WriteLine("Hello While: " + tokens[tokenCounter2].Lexeme);
                         errorFound = getInfix();
-                        if (errorFound) return 1; 
-                        if(infixTokens.Count != 0)
+                        if (errorFound) return 1;
+                        if (infixTokens.Count != 0)
                         {
                             obj = null;
                             output = null;
@@ -345,16 +382,17 @@ namespace CFPL
                             postfix = operation.logicInfixToPostFix();
                             output = operation.evaluateExpression(postfix);
                             infixTokens.Clear();
-                            if(tokens[tokenCounter].Type == TokenType.START)
+                            if (tokens[tokenCounter].Type == TokenType.START)
                             {
                                 whileStart = true;
                                 tokenCounter++;
 
-                                ParseWhile(tokenCounter2, tokenCounter); 
-                            } else
+                                ParseWhile(tokenCounter2, tokenCounter);
+                            }
+                            else
                             {
                                 errorMessages.Add(string.Format("Missing Start at Line: " + (tokens[tokenCounter - 1].Line + 1)));
-                                return 1; 
+                                return 1;
                             }
                         }
                         if (error)
@@ -390,15 +428,15 @@ namespace CFPL
 
 
                 //TOKENCOUNTER AFTER THE START 
-                Console.WriteLine("Lexeme: " + tokens[tokenCounter].Lexeme); 
+                Console.WriteLine("Lexeme: " + tokens[tokenCounter].Lexeme);
                 ParseInterpreterWhile(); //Like the Parse
-                origCounter = tokenCounter; 
+                origCounter = tokenCounter;
 
                 tokenCounter = conditionToken; //to check the condition
-                Console.WriteLine("Left Param: " + tokens[tokenCounter-1].Lexeme); //It should be the leexeme: 
-                
+                Console.WriteLine("Left Param: " + tokens[tokenCounter - 1].Lexeme); //It should be the leexeme: 
+
                 errorFound = getInfix();
-                if (errorFound) error = true; 
+                if (errorFound) error = true;
                 //Get the new condition once again. 
                 operation = new Operations(infixTokens, errorMessages, outputMap);
                 postfix = operation.logicInfixToPostFix();
@@ -406,7 +444,7 @@ namespace CFPL
 
                 infixTokens.Clear();
 
-                
+
 
                 tokenCounter = afterStartToken; //Should be on the start
                 Console.WriteLine("Original Counter after: " + tokens[tokenCounter].Lexeme);
@@ -414,15 +452,15 @@ namespace CFPL
             }
             //Take the tokenCounter back to the stop
             while (tokens[tokenCounter].Type != TokenType.STOP)
-                tokenCounter++; 
+                tokenCounter++;
         }
 
         private void ParseInterpreterWhile()
         {
-            object temp; 
-            while(tokens[tokenCounter].Type != TokenType.STOP)
+            object temp;
+            while (tokens[tokenCounter].Type != TokenType.STOP)
             {
-                Console.WriteLine("Inside Parse Interpreter While: " + tokens[tokenCounter].Lexeme); 
+                Console.WriteLine("Inside Parse Interpreter While: " + tokens[tokenCounter].Lexeme);
                 switch (tokens[tokenCounter].Type)
                 {
                     case TokenType.MULT:
@@ -464,13 +502,50 @@ namespace CFPL
                                         output = operation.evaluateExpression(postfix);
 
                                         if (outputMap[temp_ident].GetType() == typeof(double))
-                                            obj = double.Parse(output);
+                                            try
+                                            {
+                                                obj = double.Parse(output);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                errorMessages.Add(string.Format("Data types does not match at line " + (tokens[tokenCounter].Line + 1)));
+                                                error = true; 
+                                            }
+
                                         else if (outputMap[temp_ident].GetType() == typeof(int))
-                                            obj = int.Parse(output);
+
+                                            try
+                                            {
+                                                obj = int.Parse(output);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                errorMessages.Add(string.Format("Data types does not match at line  " + (tokens[tokenCounter].Line + 1)));
+                                                error = true;
+                                            }
                                         else if (outputMap[temp_ident].GetType() == typeof(string))
-                                            obj = bool.Parse(output);
+
+                                            try
+                                            {
+                                                obj = bool.Parse(output);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                errorMessages.Add(string.Format("Data types does not match at line " + (tokens[tokenCounter].Line + 1)));
+                                                error = true;
+                                            }
                                         else if (outputMap[temp_ident].GetType() == typeof(char))
-                                            obj = char.Parse(output);
+
+
+                                            try
+                                            {
+                                                obj = char.Parse(output);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                errorMessages.Add(string.Format("Data types does not match at line  " + (tokens[tokenCounter].Line + 1)));
+                                                error = true;
+                                            }
                                         else
                                         {
                                             errorMessages.Add(string.Format("Unidentified type at line " + (tokens[tokenCounter].Line + 1)));
@@ -546,7 +621,7 @@ namespace CFPL
                     case TokenType.IF:
                         tokenCounter++;
                         errorFound = getInfix();
-                        if (errorFound) error=true;
+                        if (errorFound) error = true;
                         if (infixTokens.Count != 0)
                         {
                             object obj = null;
@@ -602,14 +677,14 @@ namespace CFPL
                             else
                             {
                                 errorMessages.Add(string.Format("Missing Start at " + (tokens[tokenCounter - 1].Line + 1)));
-                                error = true; 
+                                error = true;
                             }
 
                         }
                         else
                         {
                             errorMessages.Add(string.Format("Invalid expression at line " + (tokens[tokenCounter - 1].Line + 1)));
-                            error = true; 
+                            error = true;
                         }
                         break;
                     case TokenType.ELSE:
@@ -624,7 +699,7 @@ namespace CFPL
                             else
                             {
                                 errorMessages.Add(string.Format("Missing Start at Line: " + (tokens[tokenCounter - 1].Line + 1)));
-                                error = true; 
+                                error = true;
                             }
                         }
                         break;
@@ -633,7 +708,7 @@ namespace CFPL
                         tokenCounter2 = tokenCounter;//GET THE STARTING FOR THE CONDITION
                         Console.WriteLine("Hello While: " + tokens[tokenCounter2].Lexeme);
                         errorFound = getInfix();
-                        if (errorFound) error=true;
+                        if (errorFound) error = true;
                         if (infixTokens.Count != 0)
                         {
                             obj = null;
@@ -647,12 +722,12 @@ namespace CFPL
                                 whileStart = true;
                                 tokenCounter++;
 
-                                ParseWhile(tokenCounter2,tokenCounter);
+                                ParseWhile(tokenCounter2, tokenCounter);
                             }
                             else
                             {
                                 errorMessages.Add(string.Format("Missing Start at Line: " + (tokens[tokenCounter - 1].Line + 1)));
-                                error = true; 
+                                error = true;
                             }
                         }
                         if (error)
@@ -663,7 +738,7 @@ namespace CFPL
                         break;
                 }
             }
-             
+
 
         }
 
