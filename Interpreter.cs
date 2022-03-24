@@ -19,22 +19,26 @@ namespace CFPL
         List<string> varDeclareList = new List<string>();
         private static Dictionary<string, object> outputMap;
         Dictionary<string, object> declaredVariables = new Dictionary<string, object>();
-        private int startCount = 0, ifCount=0;
-        private int stopCount=0;
+        private int startCount = 0, ifCount = 0;
+        private int stopCount = 0;
         private bool foundStop;
         string temp_ident = "";
         string msg = "";
         bool error;
         int result;
         string stringInput;
+        string output;
+        object obj; 
         Operations operation;
         //FSM fsm;
         List<String> inputVariables = new List<string>();
-        private int startLine, stopLine, flagIf=0;
-        private int ifStart=0,ifStop=0; 
+        private int startLine, stopLine, flagIf = 0;
+        private int ifStart = 0, ifStop = 0;
         private bool errorFound;
         List<Tokens> postfix = new List<Tokens>();
         private int nested;
+        private int whileCounter;
+        private bool whileStart;
 
         public Interpreter(List<Tokens> t, string input)
         {
@@ -109,7 +113,7 @@ namespace CFPL
                     case TokenType.START:
                         startCount++;
                         startLine = (tokens[tokenCounter].Line + 1);
-                     
+
                         if (!foundStart)
                             foundStart = true;
                         else
@@ -122,14 +126,10 @@ namespace CFPL
                     case TokenType.STOP:
                         stopCount++;
                         stopLine = (tokens[tokenCounter].Line + 1);
-                        Console.WriteLine("If Count: " + ifCount);
-                        Console.WriteLine("Start Count: " + startCount);
-                        Console.WriteLine("Stop Count: " + stopCount);
-
-                        if ((startLine!=stopLine) && foundStart) //Bug on IF() Start only 
+                        if ((startLine != stopLine) && foundStart) //Bug on IF() Start only 
                         {
                             foundStop = true;
-                           
+
                         }
                         else
                         {
@@ -257,16 +257,16 @@ namespace CFPL
                             postfix = operation.logicInfixToPostFix();
                             output = operation.evaluateExpression(postfix);
                             infixTokens.Clear();
-                            if(tokens[tokenCounter].Type == TokenType.START)
+                            if (tokens[tokenCounter].Type == TokenType.START)
                             {
-                                startCount++; 
+                                startCount++;
                                 ifStart++;
                                 tokenCounter++;
                                 int i = tokenCounter;
-                                
+
                                 if (output == "True")
                                 {
-                                    
+
                                     flagIf = 1;
                                     //To do if output is true 
                                     Console.WriteLine(tokens[tokenCounter].Lexeme);
@@ -276,55 +276,87 @@ namespace CFPL
                                         if (tokens[i].Type == TokenType.STOP)
                                         {
                                             ifStop++;
-                                            stopCount++; 
-                                            break; 
+                                            stopCount++;
+                                            break;
                                         }
                                         i++;
                                     }
-                                    
-                                } else
+
+                                }
+                                else
                                 {
-                                    flagIf = -1; 
+                                    flagIf = -1;
                                     //TO DO IF OUTPUT IS FALSE; skip the tokens until the next stop
                                     while (tokenCounter != tokens.Count)
                                     {
-                                        if(tokens[tokenCounter].Type == TokenType.STOP)
+                                        if (tokens[tokenCounter].Type == TokenType.STOP)
                                         {
                                             ifStop++;
-                                            stopCount++; 
+                                            stopCount++;
                                             break;
                                         }
-                                        tokenCounter++; 
+                                        tokenCounter++;
                                     }
                                 }
-                                Console.WriteLine("Start Count: " + ifCount + " Stop Count: " + ifStop); 
-                              
-                            } else
+                                Console.WriteLine("Start Count: " + ifCount + " Stop Count: " + ifStop);
+
+                            }
+                            else
                             {
                                 errorMessages.Add(string.Format("Missing Start at " + (tokens[tokenCounter - 1].Line + 1)));
                                 return 1;
                             }
-                            
-                        } else
+
+                        }
+                        else
                         {
                             errorMessages.Add(string.Format("Invalid expression at line " + (tokens[tokenCounter - 1].Line + 1)));
                             return 1;
                         }
                         break;
                     case TokenType.ELSE:
-                        if(flagIf == -1)
+                        if (flagIf == -1)
                         {
                             tokenCounter++;
-                            if(tokens[tokenCounter].Type == TokenType.START)
+                            if (tokens[tokenCounter].Type == TokenType.START)
                             {
                                 startCount++;
-                                tokenCounter++; 
-                            } else
+                                tokenCounter++;
+                            }
+                            else
                             {
                                 errorMessages.Add(string.Format("Missing Start at Line: " + (tokens[tokenCounter - 1].Line + 1)));
                                 return 1;
                             }
                         }
+                        break;
+                    case TokenType.WHILE:
+                        tokenCounter++;
+                        tokenCounter2 = tokenCounter;//GET THE STARTING FOR THE CONDITION
+                        errorFound = getInfix();
+                        if (errorFound) return 1; 
+                        if(infixTokens.Count != 0)
+                        {
+                            obj = null;
+                            output = null;
+                            operation = new Operations(infixTokens, errorMessages, outputMap);
+                            postfix = operation.logicInfixToPostFix();
+                            output = operation.evaluateExpression(postfix);
+                            infixTokens.Clear();
+                            if(tokens[tokenCounter].Type == TokenType.START)
+                            {
+                                whileStart = true;
+                                tokenCounter++;
+
+                                ParseWhile(); 
+                            } else
+                            {
+                                errorMessages.Add(string.Format("Missing Start at Line: " + (tokens[tokenCounter - 1].Line + 1)));
+                                return 1; 
+                            }
+                        }
+                        if (error)
+                            break;
                         break;
                     default:
                         tokenCounter++;
@@ -342,6 +374,171 @@ namespace CFPL
 
             return errorMessages.Count;
         }
+
+        private void ParseWhile()
+        {
+            int startCounter = tokenCounter; 
+            int tokenCounter3 = tokenCounter; //after the start
+            Console.WriteLine("Start Counter: " + startCounter + "Token Counter: " + tokenCounter + "Statement Counter: " + tokenCounter2); 
+
+            //tokenCounter 2 should not be changed since it is for the condition
+            while (output == "True")
+            {
+                Console.WriteLine("Output: " + output);
+                ParseInterpreterWhile(); //Like the Parse
+
+                tokenCounter = tokenCounter2; //to check the condition
+                errorFound = getInfix();
+                if (errorFound) error = true; 
+                //Get the new condition once again. 
+                operation = new Operations(infixTokens, errorMessages, outputMap);
+                postfix = operation.logicInfixToPostFix();
+                output = operation.evaluateExpression(postfix);
+                infixTokens.Clear();
+
+                Console.WriteLine("Hello: "); 
+                tokenCounter = startCounter; //goes back to its original position
+            }
+        }
+
+        private void ParseInterpreterWhile()
+        {
+            object temp; 
+            while(tokens[tokenCounter].Type != TokenType.STOP)
+            {
+                switch (tokens[tokenCounter].Type)
+                {
+                    case TokenType.MULT:
+                        // where multiplication token is correctly placed
+                        if (tokens[tokenCounter - 1].Type == TokenType.RIGHT_PAREN || tokens[tokenCounter - 1].Type == TokenType.RIGHT_BRACE ||
+                            tokens[tokenCounter - 1].Type == TokenType.FLOAT_LIT || tokens[tokenCounter - 1].Type == TokenType.INT_LIT ||
+                            tokens[tokenCounter - 1].Type == TokenType.IDENTIFIER)
+                        { }
+                        else
+                        {
+                            int line = tokens[tokenCounter].Line; // comment's line
+                            while (line >= tokens[tokenCounter].Line) // skip all tokens with the same line as comment's 
+                                tokenCounter++;
+                        }
+                        break;
+                    case TokenType.IDENTIFIER:
+                        temp_ident = tokens[tokenCounter].Lexeme;
+                        tokenCounter++;
+                        if (whileStart)
+                        {
+                            if (outputMap.ContainsKey(temp_ident))
+                            {
+                                if (tokens[tokenCounter].Type == TokenType.EQUALS)
+                                {
+                                    tokenCounter++;
+                                    errorFound = getInfix();
+                                    if (errorFound) error = true;
+                                    Console.WriteLine("\nINFIX EXPRESSION: ");
+                                    foreach (Tokens x in infixTokens)
+                                        Console.WriteLine(x.Type + ", " + x.Lexeme);
+                                    Console.WriteLine("END OF INFIX");
+                                    // Evaluate Infix Expression
+                                    if (infixTokens.Count != 0)
+                                    {
+                                        object obj = null;
+                                        string output = null;
+                                        operation = new Operations(infixTokens, errorMessages, outputMap);
+                                        postfix = operation.logicInfixToPostFix();
+                                        output = operation.evaluateExpression(postfix);
+
+                                        if (outputMap[temp_ident].GetType() == typeof(double))
+                                            obj = double.Parse(output);
+                                        else if (outputMap[temp_ident].GetType() == typeof(int))
+                                            obj = int.Parse(output);
+                                        else if (outputMap[temp_ident].GetType() == typeof(string))
+                                            obj = bool.Parse(output);
+                                        else if (outputMap[temp_ident].GetType() == typeof(char))
+                                            obj = char.Parse(output);
+                                        else
+                                        {
+                                            errorMessages.Add(string.Format("Unidentified type at line " + (tokens[tokenCounter].Line + 1)));
+                                            error = true;
+                                        }
+                                        outputMap[temp_ident] = obj;
+                                        if (operation.multipleIden.Count != 0)
+                                        {
+                                            // example multiple declaration: a = b = c = d = 2
+                                            // b, c, and d are stored in identifier
+                                            foreach (string identifier in operation.multipleIden)
+                                                outputMap[identifier] = obj;
+                                        }
+                                        infixTokens.Clear();
+                                    }
+                                    else // infix tokens is empty
+                                    {
+                                        errorMessages.Add(string.Format("Invalid expression at line " + (tokens[tokenCounter - 1].Line + 1)));
+                                        error = true;
+                                    }
+                                }
+                                else
+                                {
+                                    errorMessages.Add(string.Format("Expected '=' after identifier at line " + (tokens[tokenCounter].Line + 1)));
+                                    error = true;
+                                }
+                            }
+                            else
+                            {
+                                errorMessages.Add(string.Format("Identifier " + temp_ident + " is not declared at line " + (tokens[tokenCounter].Line + 1)));
+                                error = true;
+                            }
+                        }
+                        else
+                        { // if !foundStart, or for variable declaration
+                            tokenCounter++;
+                            ParseIdentifier(temp_ident);
+                        }
+                        break;
+                    case TokenType.OUTPUT:
+                        if (foundStart)
+                        {
+                            tokenCounter++;
+                            ParseOutput();
+                        }
+                        else
+                        {
+                            msg = "Syntax Error. There is something wrong with OUTPUT at line " + (tokens[tokenCounter].Line + 1);
+                            errorMessages.Add(msg);
+                            error = true;
+                        }
+                        break;
+                    case TokenType.INPUT:
+                        tokenCounter++;
+                        ParseInput();
+                        break;
+                    case TokenType.INT_LIT:
+                        temp = (int)tokens[tokenCounter].Literal; //have to check if everything is valid as well
+                        tokenCounter++;
+                        break;
+                    case TokenType.CHAR_LIT:
+                        temp = Convert.ToChar(tokens[tokenCounter].Literal);
+                        tokenCounter++;
+                        break;
+                    case TokenType.BOOL_LIT:
+                        temp = (string)tokens[tokenCounter].Literal;
+                        tokenCounter++;
+                        break;
+                    case TokenType.FLOAT_LIT:
+                        temp = (double)tokens[tokenCounter].Literal;
+                        tokenCounter++;
+                        break;
+                    case TokenType.WHILE:
+                        tokenCounter++;
+                        ParseWhile();
+                        break;
+                    default:
+                        tokenCounter++;
+                        break;
+                }
+            }
+             
+
+        }
+
         /// <summary>
         /// ParseInput:
         /// Reads and Saves the inputted values to the outputMap
