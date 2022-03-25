@@ -137,11 +137,13 @@ namespace CFPL
                         {
                             if (countStartStop.Count != 0)
                                 countStartStop.Pop();
+                            /* 
                             else
                             {
                                 errorMessages.Add("Unbalanced number of start and stop at line " + (tokens[tokenCounter].Line + 1));
                                 return 1;
                             }
+                            */ 
                         }
                         else // last token
                         {
@@ -276,6 +278,7 @@ namespace CFPL
                                         output = operation.evaluateExpression(postfix);
 
                                         if (outputMap[temp_ident].GetType() == typeof(double))
+
                                             obj = double.Parse(output);
                                         else if (outputMap[temp_ident].GetType() == typeof(int))
                                             obj = int.Parse(output);
@@ -320,7 +323,7 @@ namespace CFPL
                         { // if !foundStart, or for variable declaration
                             if (outputMap.ContainsKey(temp_ident))
                             {
-                                errorMessages.Add("Syntax error at line " + (tokens[tokenCounter].Line));
+                                errorMessages.Add("Syntax error at line " + (tokens[tokenCounter].Line+1));
                                 return errorMessages.Count;
                             }
                             tokenCounter++;
@@ -328,17 +331,8 @@ namespace CFPL
                         }
                         break;
                     case TokenType.INPUT:
-                        if (result == 1)
-                        {
-                            tokenCounter++;
-                            ParseInput();
-                        }
-                        else
-                        {
-                            msg = "Syntax Error. There is something wrong with INPUT at line " + (tokens[tokenCounter].Line + 1);
-                            errorMessages.Add(msg);
-                            return 1;
-                        }
+                        tokenCounter++;
+                        ParseInput();
                         break;
                     case TokenType.OUTPUT:
                         //result = fsm.Output(tokens, tokenCounter);
@@ -355,7 +349,7 @@ namespace CFPL
                         }
                         break;
                     default:
-                        errorMessages.Add("Syntax error at line " + (tokens[tokenCounter].Line));
+                        errorMessages.Add("Syntax error at line " + (tokens[tokenCounter].Line+1));
                         return 1;
                 }
                 temp_ident = "";
@@ -386,6 +380,15 @@ namespace CFPL
             Console.WriteLine("VALUE OF TOKEN COUNTER AFTER INFIX IN WHILE " + tokenCounter);
             i = tokenCounter;
 
+            bool sCount = startstopCount();
+
+            if (!sCount)
+            {
+                errorMessages.Add("Unbalanced number of start-stop. (W)");
+                return true;
+            }
+
+            
             do
             {
                 if (tokens[i].Type == TokenType.START)
@@ -394,11 +397,13 @@ namespace CFPL
                     controlsCounter--;
                 i++;
             } while (controlsCounter != 0 && i != tokens.Count - 1);
+            /* 
             if (i == tokens.Count)
             {
                 errorMessages.Add("Unbalanced number of start-stop. (W)");
                 return true;
             }
+            */
 
             if (infixTokens.Count != 0)
             {
@@ -441,6 +446,26 @@ namespace CFPL
                 tokenCounter++;
             return false;
         }
+
+        private bool startstopCount()
+        {
+            int start=0, stop = 0;
+            int i = 0;
+            while (i != tokens.Count)
+            {
+                if (tokens[i].Type == TokenType.START)
+                    start++;
+                if (tokens[i].Type == TokenType.STOP)
+                    stop++;
+                i++;
+            }
+            Console.WriteLine("Start: " + start + " Stop: " + stop); 
+            if (start == stop)
+                return true;
+            else
+                return false; 
+        }
+
         /// <summary>
         /// ParseInput:
         /// Reads and Saves the inputted values to the outputMap
@@ -922,7 +947,7 @@ namespace CFPL
                                     outputMap.Add(x, (int)declaredVariables[x]); //add it to the outputMap dictionary serves as final list for output
                             else
                             {
-                                msg = "Identifier name already taken at line " + (tokens[tokenCounter].Line + 1);
+                                msg = "Type Error at line " + (tokens[tokenCounter].Line + 1);
                                 errorMessages.Add(msg);
                             }
                         }
@@ -951,7 +976,7 @@ namespace CFPL
                             }
                             else
                             {
-                                msg = "Identifier name already taken at line " + tokens[tokenCounter].Line;
+                                msg = "Type Error at line at line " + (tokens[tokenCounter].Line+1);
                                 errorMessages.Add(msg);
                             }
                         }
@@ -981,7 +1006,7 @@ namespace CFPL
                             }
                             else
                             {
-                                msg = "Identifier name already taken at line " + tokens[tokenCounter].Line;
+                                msg = "Type error at line " + (tokens[tokenCounter].Line+1);
                                 errorMessages.Add(msg);
                             }
                         }
@@ -1011,7 +1036,7 @@ namespace CFPL
                             }
                             else
                             {
-                                msg = "Identifier name already taken at line " + tokens[tokenCounter].Line;
+                                msg = "Type Error at line " + (tokens[tokenCounter].Line+1);
                                 errorMessages.Add(msg);
                             }
                         }
