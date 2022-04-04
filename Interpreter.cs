@@ -19,25 +19,29 @@ namespace CFPL
         List<string> varDeclareList = new List<string>();
         private static Dictionary<string, object> outputMap;
         Dictionary<string, object> declaredVariables = new Dictionary<string, object>();
-        private int startCount = 0, ifCount = 0, stopCount = 0;
         private bool foundStop;
         private bool errorFound;
+        /// <summary>
+        /// The receiving identifer in the executable block. A = 10 + 2. A is the temp_ident
+        /// </summary>
         string temp_ident = "";
-        string msg = "";
+
         bool error;
 
         private int startLine, stopLine, flagIf = 0;
-        private int ifStart = 0, ifStop = 0;
         List<Tokens> postfix = new List<Tokens>();
-        private int nested;
         int result;
         string stringInput;
         Operations operation;
+
+
         //FSM fsm;
         List<String> inputVariables = new List<string>();
 
         //mine
         Stack<bool> countStartStop = new Stack<bool>();
+        bool foundWhileStart = false;
+        int stopWhile = -1;
 
         /// <summary>
         /// Counts the number of START keyword found in control structures: if,else,while
@@ -77,6 +81,8 @@ namespace CFPL
             int closingStop = 0;
             object temp;
             int total_tokens = tokens.Count;
+            double temp_double = 0.0;
+            int temp_int = 0;
             if (tokens[total_tokens - 1].Type != TokenType.STOP)
             {
                 errorMessages.Add("Missing STOP keyword");
@@ -103,8 +109,7 @@ namespace CFPL
                         //result = fsm.Declaration(tokens, tokenCounter);
                         if (foundStart)
                         {
-                            msg = "Invalid variable declaration due to START at line " + (tokens[tokenCounter].Line + 1);
-                            errorMessages.Add(msg);
+                            errorMessages.Add("Invalid variable declaration due to START at line " + (tokens[tokenCounter].Line + 1));
                             return 1;
                         }
                         else
@@ -120,36 +125,42 @@ namespace CFPL
                         ParseAs();
                         break;
                     case TokenType.START:
-                        startCount++;
                         startLine = tokens[tokenCounter].Line;
                         if (!foundStart)
                             foundStart = true;
                         else
                         {
-                            msg = "Syntax Error. Incorrect usage of START at line " + (tokens[tokenCounter].Line + 1);
-                            errorMessages.Add(msg);
+                            errorMessages.Add("Syntax Error. Incorrect usage of START at line " + (tokens[tokenCounter].Line + 1));
                             return 1;
                         }
                         tokenCounter++;
                         break;
                     case TokenType.STOP:
+                        if (foundWhileStart)
+                        {
+                            foundWhileStart = false;
+                            return errorMessages.Count;
+                        }
                         if (tokenCounter != tokens.Count - 1 && foundStart) // not the last token
                         {
                             if (countStartStop.Count != 0)
                                 countStartStop.Pop();
-                            /* 
+
+                            /*
                             else
                             {
-                                errorMessages.Add("Unbalanced number of start and stop at line " + (tokens[tokenCounter].Line + 1));
+                                errorMessages.Add("Unbalanced number of start and stop at line " + (tokens[tokenCounter].Line +1));
                                 return 1;
-                            }
-                            */ 
+                            }*/
                         }
                         else // last token
                         {
                             // if balanced start-stop
                             if (foundStart && countStartStop.Count == 0)
+                            {
+                                stopLine = tokens[tokenCounter].Line;
                                 foundStop = true;
+                            }
                         }
                         tokenCounter++;
                         /*
@@ -190,7 +201,7 @@ namespace CFPL
                             object obj = null;
                             string output = null;
                             operation = new Operations(infixTokens, errorMessages, outputMap);
-                            postfix = operation.logicInfixToPostFix();
+                            postfix = operation.convertInfixToPostfix();
                             output = operation.evaluateExpression(postfix);
                             infixTokens.Clear();
                             if (tokens[tokenCounter].Type == TokenType.START)
@@ -215,7 +226,7 @@ namespace CFPL
                             } // no start after IF
                             else
                             {
-                                errorMessages.Add(string.Format("(if)Missing Start at " + (tokens[tokenCounter].Line + 1)));
+                                errorMessages.Add(string.Format("(IF)Missing Start at " + (tokens[tokenCounter].Line + 1)));
                                 return 1;
                             }
                         }
@@ -234,11 +245,12 @@ namespace CFPL
 
                             // see ahead if there's a stop
                             closingStop = foundAClosingStop();
+                            // -1 means there's an unbalanced number of start-stop
                             if (closingStop == -1) return 1;
                         }
                         else
                         {
-                            errorMessages.Add(string.Format("Missing Start at " + (tokens[tokenCounter].Line + 1)));
+                            errorMessages.Add(string.Format("(ELSE)Missing Start at line " + (tokens[tokenCounter].Line + 1)));
                             return 1;
                         }
                         // back to Token ELSE
@@ -272,26 +284,53 @@ namespace CFPL
                                         object obj = null;
                                         string output = null;
                                         operation = new Operations(infixTokens, errorMessages, outputMap);
-                                        postfix = operation.logicInfixToPostFix();
-
-
+                                        postfix = operation.convertInfixToPostfix();
                                         output = operation.evaluateExpression(postfix);
-
-                                        if (outputMap[temp_ident].GetType() == typeof(double))
-
-                                            obj = double.Parse(output);
-                                        else if (outputMap[temp_ident].GetType() == typeof(int))
-                                            obj = int.Parse(output);
+                                        Console.WriteLine("OUTPUT FROM EVALUATE EXPRFESSION IS " + output);
+                                        if (outputMap[temp_ident].GetType() == typeof(double) || outputMap[temp_ident].GetType() == typeof(int))
+                                        {
+                                            if (operation.isDigit(output))
+                                            {
+                                                temp_double = double.Parse(output);
+                                                if (outputMap[temp_ident].GetType() == typeof(int))
+                                                    obj = (int)temp_double;
+                                                else
+                                                    obj = temp_double;
+                                            }
+                                            else
+                                            {
+                                                errorMessages.Add("(I)Invalid expression at line " + (tokens[tokenCounter].Line + 1));
+                                                return 1;
+                                            }
+                                        }
+                                        //boolean
                                         else if (outputMap[temp_ident].GetType() == typeof(string))
-                                            obj = output;
+                                        {
+                                            if (output == "True" || output == "False")
+                                                obj = output;
+                                            else
+                                            {
+                                                errorMessages.Add("(B)Invalid expression at line " + (tokens[tokenCounter].Line + 1));
+                                                return 1;
+                                            }
+                                        }
                                         else if (outputMap[temp_ident].GetType() == typeof(char))
-                                            obj = char.Parse(output);
+                                        {
+                                            if (output.Length == 1)
+                                                obj = char.Parse(output);
+                                            else
+                                            {
+                                                errorMessages.Add("(C)Invalid expression at line " + (tokens[tokenCounter].Line + 1));
+                                                return 1;
+                                            }
+                                        }
                                         else
                                         {
                                             errorMessages.Add(string.Format("Unidentified type at line " + (tokens[tokenCounter].Line + 1)));
                                             return 1;
                                         }
                                         outputMap[temp_ident] = obj;
+
                                         if (operation.multipleIden.Count != 0)
                                         {
                                             // example multiple declaration: a = b = c = d = 2
@@ -303,7 +342,7 @@ namespace CFPL
                                     }
                                     else // infix tokens is empty
                                     {
-                                        errorMessages.Add(string.Format("Invalid expression at line " + (tokens[tokenCounter - 1].Line + 1)));
+                                        errorMessages.Add(string.Format("(EMPTY)Invalid expression at line " + (tokens[tokenCounter - 1].Line + 1)));
                                         return 1;
                                     }
                                 }
@@ -323,7 +362,7 @@ namespace CFPL
                         { // if !foundStart, or for variable declaration
                             if (outputMap.ContainsKey(temp_ident))
                             {
-                                errorMessages.Add("Syntax error at line " + (tokens[tokenCounter].Line+1));
+                                errorMessages.Add("Syntax error at line " + (tokens[tokenCounter].Line));
                                 return errorMessages.Count;
                             }
                             tokenCounter++;
@@ -331,8 +370,16 @@ namespace CFPL
                         }
                         break;
                     case TokenType.INPUT:
-                        tokenCounter++;
-                        ParseInput();
+                        if (result == 1)
+                        {
+                            tokenCounter++;
+                            ParseInput();
+                        }
+                        else
+                        {
+                            errorMessages.Add("Syntax Error. There is something wrong with INPUT at line " + (tokens[tokenCounter].Line + 1));
+                            return 1;
+                        }
                         break;
                     case TokenType.OUTPUT:
                         //result = fsm.Output(tokens, tokenCounter);
@@ -343,52 +390,284 @@ namespace CFPL
                         }
                         else
                         {
-                            msg = "Syntax Error. There is something wrong with OUTPUT at line " + (tokens[tokenCounter].Line + 1);
-                            errorMessages.Add(msg);
+                            errorMessages.Add("Syntax Error. There is something wrong with OUTPUT at line " + (tokens[tokenCounter].Line + 1));
                             return 1;
                         }
                         break;
                     default:
-                        errorMessages.Add("Syntax error at line " + (tokens[tokenCounter].Line+1));
-                        return 1;
+                        tokenCounter++;
+                        break; 
+                        //errorMessages.Add("Syntax error at line " + (tokens[tokenCounter].Line));
+                        //return 1;
                 }
                 temp_ident = "";
                 temp = null;
             }
-            if (!foundStop)
-            {
-                msg = "Program execution failed.";
-                errorMessages.Add(msg);
-                Console.WriteLine(msg);
-            }
+            if (!foundStop || startLine == stopLine)
+                errorMessages.Add("Program execution failed.");
+
             Console.WriteLine("\nMAIN PARSE COMPLETE\n");
+            return errorMessages.Count;
+        }
+        public int ParseNestedWhile()
+        {
+            int closingStop = 0;
+            int total_tokens = tokens.Count;
+            double temp_double = 0.0;
+            //while (tokens[tokenCounter].Type != TokenType.STOP) 
+            while (tokenCounter != stopWhile)
+            {
+                switch (tokens[tokenCounter].Type)
+                {
+                    case TokenType.MULT:
+                        // where multiplication token is correctly placed
+                        if (tokens[tokenCounter - 1].Type == TokenType.RIGHT_PAREN || tokens[tokenCounter - 1].Type == TokenType.RIGHT_BRACE ||
+                            tokens[tokenCounter - 1].Type == TokenType.FLOAT_LIT || tokens[tokenCounter - 1].Type == TokenType.INT_LIT ||
+                            tokens[tokenCounter - 1].Type == TokenType.IDENTIFIER)
+                        { }
+                        else
+                        {
+                            int line = tokens[tokenCounter].Line; // comment's line
+                            while (line >= tokens[tokenCounter].Line) // skip all tokens with the same line as comment's 
+                                tokenCounter++;
+                        }
+                        break;
+                    case TokenType.STOP:
+
+                        tokenCounter++;
+
+                        break;
+                    case TokenType.WHILE:
+                        errorFound = parseWhile();
+                        if (errorFound) return 1;
+                        break;
+                    case TokenType.IF:
+                        tokenCounter++;
+                        errorFound = getInfix();
+                        if (errorFound) return 1;
+                        if (infixTokens.Count != 0)
+                        {
+                            object obj = null;
+                            string output = null;
+                            operation = new Operations(infixTokens, errorMessages, outputMap);
+                            postfix = operation.convertInfixToPostfix();
+                            output = operation.evaluateExpression(postfix);
+                            infixTokens.Clear();
+                            if (tokens[tokenCounter].Type == TokenType.START)
+                            {
+                                countStartStop.Push(true);
+                                // see ahead if there's a stop
+                                closingStop = foundAClosingStop();
+                                // no closing stop found for this control structure
+                                if (closingStop == -1) return 1;
+
+                                if (output == "True")
+                                {
+                                    tokenCounter++;
+                                    flagIf = 1; // tells not to execute Token ELSE
+                                }
+                                else // condition is false, so skip all tokens inside the IF block
+                                {
+                                    flagIf = -1; // tells to execute Token ELSE
+                                    while (tokens[tokenCounter].Type != TokenType.STOP)
+                                        tokenCounter++;
+                                }
+                            } // no start after IF
+                            else
+                            {
+                                errorMessages.Add(string.Format("(IF)Missing Start at " + (tokens[tokenCounter].Line + 1)));
+                                return 1;
+                            }
+                        }
+                        else
+                        {
+                            errorMessages.Add(string.Format("Invalid expression at line " + (tokens[tokenCounter - 1].Line + 1)));
+                            return 1;
+                        }
+                        break;
+                    case TokenType.ELSE: // else is a must execute control structure
+                        tokenCounter++;
+                        // check first if theres a start and stop
+                        if (tokens[tokenCounter].Type == TokenType.START)
+                        {
+                            countStartStop.Push(true);
+
+                            // see ahead if there's a stop
+                            closingStop = foundAClosingStop();
+                            // -1 means there's an unbalanced number of start-stop
+                            if (closingStop == -1) return 1;
+                        }
+                        else
+                        {
+                            errorMessages.Add(string.Format("(ELSE)Missing Start at line " + (tokens[tokenCounter].Line + 1)));
+                            return 1;
+                        }
+                        // back to Token ELSE
+                        if (flagIf == -1) // meaning IF-statement was false
+                            tokenCounter++; // points to token after start
+
+                        else // flagIf = 1, skip the else part of the IF, 
+                        { // because the condition was TRUE
+                            while (tokens[tokenCounter].Type != TokenType.STOP)
+                                tokenCounter++;
+                        }
+                        break;
+                    case TokenType.IDENTIFIER:
+                        temp_ident = tokens[tokenCounter].Lexeme;
+                        tokenCounter++;
+                        if (foundStart)
+                        {
+                            postfix = new List<Tokens>();
+                            // check if variable is declared
+                            if (outputMap.ContainsKey(temp_ident))
+                            {
+                                if (tokens[tokenCounter].Type == TokenType.EQUALS)
+                                {
+                                    tokenCounter++;
+                                    errorFound = getInfix();
+                                    if (errorFound) return 1;
+
+                                    // Evaluate Infix Expression
+                                    if (infixTokens.Count != 0)
+                                    {
+                                        object obj = null;
+                                        string output = null;
+                                        operation = new Operations(infixTokens, errorMessages, outputMap);
+                                        postfix = operation.convertInfixToPostfix();
+                                        output = operation.evaluateExpression(postfix);
+                                        Console.WriteLine("OUTPUT FROM EVALUATE EXPRFESSION IS " + output);
+                                        if (outputMap[temp_ident].GetType() == typeof(double) || outputMap[temp_ident].GetType() == typeof(int))
+                                        {
+                                            if (operation.isDigit(output))
+                                            {
+                                                temp_double = double.Parse(output);
+                                                if (outputMap[temp_ident].GetType() == typeof(int))
+                                                    obj = (int)temp_double;
+                                                else
+                                                    obj = temp_double;
+                                            }
+                                            else
+                                            {
+                                                errorMessages.Add("(I)Invalid expression at line " + (tokens[tokenCounter].Line + 1));
+                                                return 1;
+                                            }
+                                        }
+                                        //boolean
+                                        else if (outputMap[temp_ident].GetType() == typeof(string))
+                                        {
+                                            if (output == "True" || output == "False")
+                                                obj = output;
+                                            else
+                                            {
+                                                errorMessages.Add("(B)Invalid expression at line " + (tokens[tokenCounter].Line + 1));
+                                                return 1;
+                                            }
+                                        }
+                                        else if (outputMap[temp_ident].GetType() == typeof(char))
+                                        {
+                                            if (output.Length == 1)
+                                                obj = char.Parse(output);
+                                            else
+                                            {
+                                                errorMessages.Add("(C)Invalid expression at line " + (tokens[tokenCounter].Line + 1));
+                                                return 1;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            errorMessages.Add(string.Format("Unidentified type at line " + (tokens[tokenCounter].Line + 1)));
+                                            return 1;
+                                        }
+                                        outputMap[temp_ident] = obj;
+
+                                        if (operation.multipleIden.Count != 0)
+                                        {
+                                            // example multiple declaration: a = b = c = d = 2
+                                            // b, c, and d are stored in identifier
+                                            foreach (string identifier in operation.multipleIden)
+                                                outputMap[identifier] = obj;
+                                        }
+                                        infixTokens.Clear();
+                                    }
+                                    else // infix tokens is empty
+                                    {
+                                        errorMessages.Add(string.Format("(EMPTY)Invalid expression at line " + (tokens[tokenCounter - 1].Line + 1)));
+                                        return 1;
+                                    }
+                                }
+                                else
+                                {
+                                    errorMessages.Add(string.Format("Expected '=' after identifier at line " + (tokens[tokenCounter].Line + 1)));
+                                    return 1;
+                                }
+                            }
+                            else
+                            {
+                                errorMessages.Add(string.Format("Identifier " + temp_ident + " is not declared at line " + (tokens[tokenCounter].Line + 1)));
+                                return 1;
+                            }
+                        }
+                        else
+                        { // if !foundStart, or for variable declaration
+                            if (outputMap.ContainsKey(temp_ident))
+                            {
+                                errorMessages.Add("Syntax error at line " + (tokens[tokenCounter].Line));
+                                return errorMessages.Count;
+                            }
+                            tokenCounter++;
+                            ParseIdentifier(temp_ident);
+                        }
+                        break;
+                    case TokenType.INPUT:
+                        if (result == 1)
+                        {
+                            tokenCounter++;
+                            ParseInput();
+                        }
+                        else
+                        {
+                            errorMessages.Add("Syntax Error. There is something wrong with INPUT at line " + (tokens[tokenCounter].Line + 1));
+                            return 1;
+                        }
+                        break;
+                    case TokenType.OUTPUT:
+                        tokenCounter++;
+                        ParseOutput();
+                        break;
+                    default:
+                        tokenCounter++;
+                        break; 
+                        //errorMessages.Add("Syntax error at line " + (tokens[tokenCounter].Line));
+                        //return 1;
+                }
+                temp_ident = "";
+            }
+            // if (!foundStop || startLine == stopLine)
+            //   errorMessages.Add("Program execution failed.");
+
+            Console.WriteLine("\nNESTED WHILE PARSE COMPLETE\n");
             return errorMessages.Count;
         }
         private bool parseWhile()
         {
             tokenCounter++; // points to parenthesis after while
             // where while is found;
-            int n, i;
-            n = tokenCounter;
-            int stopWhile = 0;
+            int condition, i;
+            condition = tokenCounter;
+            //int stopWhile = 0;
             int check = 0;
+
+            // counts the number of start-stop inside while
             int controlsCounter = 0;
 
-            Console.WriteLine("\nVALUE OF TOKEN COUNTER " + n);
+            Console.WriteLine("\nVALUE OF TOKEN COUNTER " + condition);
             errorFound = getInfix(); // token counter points to start
             if (errorFound) return true;
             Console.WriteLine("VALUE OF TOKEN COUNTER AFTER INFIX IN WHILE " + tokenCounter);
             i = tokenCounter;
 
-            bool sCount = startstopCount();
-
-            if (!sCount)
-            {
-                errorMessages.Add("Unbalanced number of start-stop. (W)");
-                return true;
-            }
-
-            
+            // do this on the outer loop, and do it once
+            // insert...
             do
             {
                 if (tokens[i].Type == TokenType.START)
@@ -397,45 +676,44 @@ namespace CFPL
                     controlsCounter--;
                 i++;
             } while (controlsCounter != 0 && i != tokens.Count - 1);
-            /* 
             if (i == tokens.Count)
             {
                 errorMessages.Add("Unbalanced number of start-stop. (W)");
                 return true;
             }
-            */
+            stopWhile = i;
 
             if (infixTokens.Count != 0)
             {
                 operation = new Operations(infixTokens, errorMessages, outputMap);
-                postfix = operation.logicInfixToPostFix();
+                postfix = operation.convertInfixToPostfix();
                 string output = operation.evaluateExpression(postfix);
-                Console.WriteLine("TOKEN COUNTER NOW POINTS AT " + tokens[tokenCounter].Type + ", " + tokens[tokenCounter].Lexeme);
                 while (output == "True")
                 {
                     if (tokens[tokenCounter].Type == TokenType.START)
                     {
+                        foundWhileStart = true;
                         countStartStop.Push(true);
                         tokenCounter++;
                     }
                     else
                     {
-                        errorMessages.Add(string.Format("Missing Start at " + (tokens[tokenCounter].Line + 1)));
+                        errorMessages.Add(string.Format("Missing Start at line" + (tokens[tokenCounter].Line + 1)));
                         return true;
                     }
                     infixTokens.Clear();
-                    check = Parse();
+                    check = ParseNestedWhile();
                     if (check != 0) return true;
-                    stopWhile = tokenCounter;
+                    // stopWhile = tokenCounter;
 
                     // back to while condition
-                    tokenCounter = n;
-                    Console.WriteLine("\nVALUE OF TOKEN COUNTER" + tokenCounter);
+                    tokenCounter = condition;
+                    Console.WriteLine("\nVALUE OF TOKEN COUNTER " + tokenCounter);
                     errorFound = getInfix();
                     operation = new Operations(infixTokens, errorMessages, outputMap);
 
                     if (errorFound) return true;
-                    postfix = operation.logicInfixToPostFix();
+                    postfix = operation.convertInfixToPostfix();
 
                     output = operation.evaluateExpression(postfix);
                     Console.WriteLine("CURRENT VALUE OF OUTPUT " + output);
@@ -446,26 +724,6 @@ namespace CFPL
                 tokenCounter++;
             return false;
         }
-
-        private bool startstopCount()
-        {
-            int start=0, stop = 0;
-            int i = 0;
-            while (i != tokens.Count)
-            {
-                if (tokens[i].Type == TokenType.START)
-                    start++;
-                if (tokens[i].Type == TokenType.STOP)
-                    stop++;
-                i++;
-            }
-            Console.WriteLine("Start: " + start + " Stop: " + stop); 
-            if (start == stop)
-                return true;
-            else
-                return false; 
-        }
-
         /// <summary>
         /// ParseInput:
         /// Reads and Saves the inputted values to the outputMap
@@ -512,9 +770,7 @@ namespace CFPL
                         try { outputMap[v] = int.Parse(inputValues[x++]); }
                         catch (Exception)
                         {
-                            msg = "Type does not match at INPUT.";
-                            errorMessages.Add(msg);
-                            Console.WriteLine(msg);
+                            errorMessages.Add("Type does not match at INPUT.");
                         }
                     }
                     else if (type == typeof(double))
@@ -522,9 +778,7 @@ namespace CFPL
                         try { outputMap[v] = double.Parse(inputValues[x++]); }
                         catch (Exception)
                         {
-                            msg = "Type does not match at INPUT.";
-                            errorMessages.Add(msg);
-                            Console.WriteLine(msg);
+                            errorMessages.Add("Type does not match at INPUT.");
                         }
                     }
                     else if (type == typeof(char))
@@ -532,9 +786,7 @@ namespace CFPL
                         try { outputMap[v] = char.Parse(inputValues[x++]); }
                         catch (Exception)
                         {
-                            msg = "Type does not match at INPUT.";
-                            errorMessages.Add(msg);
-                            Console.WriteLine(msg);
+                            errorMessages.Add("Type does not match at INPUT.");
                         }
                     }
                     else if (type == typeof(string))
@@ -542,9 +794,7 @@ namespace CFPL
                         try { outputMap[v] = inputValues[x++]; }
                         catch (Exception)
                         {
-                            msg = "Type does not match at INPUT.";
-                            errorMessages.Add(msg);
-                            Console.WriteLine(msg);
+                            errorMessages.Add("Type does not match at INPUT.");
                         }
                     }
                 }
@@ -563,11 +813,7 @@ namespace CFPL
                 tokenCounter++;
             }
             else
-            {
-                msg = "Variable not initialized at line " + (tokens[tokenCounter].Line + 1);
-                errorMessages.Add(msg);
-                Console.WriteLine(msg);
-            }
+                errorMessages.Add("Variable not initialized at line " + (tokens[tokenCounter].Line + 1));
         }
         private void ParseIdentifier(string identifier)
         {
@@ -611,11 +857,7 @@ namespace CFPL
                                 outputMap[identifier] = temp;
                             }
                             else
-                            {
-                                msg = "Assigned variables are in different types at line " + (tokens[tokenCounter].Line + 1);
-                                errorMessages.Add(msg);
-                                Console.WriteLine(msg);
-                            }
+                                errorMessages.Add("Assigned variables are in different types at line " + (tokens[tokenCounter].Line + 1));
                             break;
                         case TokenType.SUBT:
                             tokenCounter++;
@@ -658,9 +900,7 @@ namespace CFPL
                 }
                 else
                 {
-                    msg = "Syntax Error. Variable Assignation failed at line " + (tokens[tokenCounter].Line + 1);
-                    errorMessages.Add(msg);
-                    Console.WriteLine(msg);
+                    errorMessages.Add("Syntax Error. Variable Assignation failed at line " + (tokens[tokenCounter].Line + 1));
                     error = true;
                 }
             }
@@ -690,13 +930,12 @@ namespace CFPL
                             if (outputMap.ContainsKey(temp_identOut)) //checks if the identifier is inside the final outputMap
                             {
                                 output = outputMap[temp_identOut].ToString();
+                                Console.WriteLine("OUT: " + output);
                                 outputMessages.Add(output);  //add it to the messages needed to be outputted
                             }
                             else
                             {
-                                msg = "Variable not initialized at line " + (tokens[tokenCounter2].Line + 1);
-                                errorMessages.Add(msg);
-                                Console.WriteLine(msg);
+                                errorMessages.Add("Variable not initialized at line " + (tokens[tokenCounter2].Line + 1));
                                 error = true;
                             }
                             if (tokens[tokenCounter2 + 1].Type == TokenType.AMPERSAND)
@@ -706,51 +945,61 @@ namespace CFPL
                             break;
                         case TokenType.DOUBLE_QUOTE:
                             tokenCounter2++;
-                            if (tokens[tokenCounter2].Type == TokenType.SHARP)
+                            bool open = true;
+                            while (open)
                             {
-                                outputMessages.Add("\n");
-                                tokenCounter2++;
-                            }
-                            else if (tokens[tokenCounter2].Type == TokenType.TILDE)
-                            {
-                                outputMessages.Add(" ");
-                                tokenCounter2++;
-                            }
-                            else if (tokens[tokenCounter2].Type == TokenType.LEFT_BRACE)
-                            {
-                                tokenCounter2++;
-                                if (tokens[tokenCounter2].Type == TokenType.RIGHT_BRACE && tokens[tokenCounter2 + 1].Type == TokenType.RIGHT_BRACE)
+                                if (tokens[tokenCounter2].Type == TokenType.SHARP)
                                 {
-                                    outputMessages.Add(tokens[tokenCounter2].Lexeme);
+                                    outputMessages.Add("\n");
+                                    Console.WriteLine();
                                     tokenCounter2++;
                                 }
-                                else
+                                else if (tokens[tokenCounter2].Type == TokenType.TILDE)
                                 {
-                                    while (tokens[tokenCounter2].Type != TokenType.RIGHT_BRACE)
+                                    outputMessages.Add(" ");
+                                    Console.WriteLine(" ");
+                                    tokenCounter2++;
+                                }
+                                else if (tokens[tokenCounter2].Type == TokenType.LEFT_BRACE)
+                                { // only one character is stored inside the brackets
+                                    if (!isEscapeCharacter(tokens[tokenCounter2 + 1].Type.ToString()))
+                                        errorMessages.Add("Invalid token inside brackets at line " + (tokens[tokenCounter2].Line + 1));
+
+                                    // for escape char
+                                    if (tokens[tokenCounter2 + 2].Type == TokenType.RIGHT_BRACE)
                                     {
+                                        tokenCounter2++;
                                         outputMessages.Add(tokens[tokenCounter2].Lexeme);
+                                        Console.WriteLine("OUT: " + tokens[tokenCounter2].Lexeme);
+                                        tokenCounter2 += 2;
+                                    }
+                                    else
+                                    { // left brace is outputted
+                                        outputMessages.Add(tokens[tokenCounter2].Lexeme);
+                                        Console.WriteLine("OUT: " + tokens[tokenCounter2].Lexeme);
                                         tokenCounter2++;
                                     }
                                 }
-                                tokenCounter2++;
-                            }
-                            else
-                            {
-                                outputMessages.Add(tokens[tokenCounter2].Lexeme);
-                                tokenCounter2++;
-                            }
-                            if (tokens[tokenCounter2].Type == TokenType.DOUBLE_QUOTE)
-                            {
-                                if (tokens[tokenCounter2 + 1].Type == TokenType.AMPERSAND)
-                                    tokenCounter2 += 2;
                                 else
+                                {
+                                    outputMessages.Add(tokens[tokenCounter2].Lexeme);
+                                    Console.WriteLine("OUT: " + tokens[tokenCounter2].Lexeme);
                                     tokenCounter2++;
-                            }
-                            else
-                            {
-                                msg = "Missing double quotes at line " + (tokens[tokenCounter2].Line + 1);
-                                errorMessages.Add(msg);
-                                error = true;
+                                }
+                                if (tokens[tokenCounter2].Type == TokenType.DOUBLE_QUOTE)
+                                {
+                                    open = false;
+                                    if (tokens[tokenCounter2 + 1].Type == TokenType.AMPERSAND)
+                                        tokenCounter2 += 2;
+                                    else
+                                        tokenCounter2++;
+                                }
+                                // check if mo lapas na siyas output line
+                                if (open && currentLine != tokens[tokenCounter2].Line)
+                                {
+                                    errorMessages.Add("Missing double quotes at line " + (tokens[tokenCounter2].Line));
+                                    break;
+                                }
                             }
                             break;
                         default:
@@ -767,12 +1016,7 @@ namespace CFPL
                 Console.WriteLine("AFTER OUTPUT IS " + tokens[tokenCounter].Type + ", " + tokens[tokenCounter].Lexeme);
             }
             else
-            {
-                msg = "Syntax Error. Something wrong with the OUTPUT at line " + (tokens[tokenCounter].Line + 1);
-                errorMessages.Add(msg);
-                Console.WriteLine(msg);
-            }
-
+                errorMessages.Add("Syntax Error. Something wrong with the OUTPUT at line " + (tokens[tokenCounter].Line + 1));
         }
         /* 
          * ParseDeclaration: 
@@ -786,8 +1030,7 @@ namespace CFPL
                 temp_ident = tokens[tokenCounter].Lexeme;
                 if (varDeclareList.Contains(temp_ident))
                 {
-                    msg = "Identifier already taken at line" + (tokens[tokenCounter].Line + 1);
-                    errorMessages.Add(msg);
+                    errorMessages.Add("Identifier already taken at line" + (tokens[tokenCounter].Line + 1));
                     return;
                 }
                 else
@@ -801,11 +1044,7 @@ namespace CFPL
                 }
             }
             else
-            {
-                msg = "Invalid variable declaration. After VAR is not an identifier at line " + (tokens[tokenCounter].Line + 1);
-                errorMessages.Add(msg);
-            }
-
+                errorMessages.Add("Invalid variable declaration. After VAR is not an identifier at line " + (tokens[tokenCounter].Line + 1));
         }
 
         /* 
@@ -825,8 +1064,7 @@ namespace CFPL
                     temp_ident = tokens[tokenCounter].Lexeme;
                     if (varDeclareList.Contains(temp_ident))
                     {
-                        msg = "Identifier already taken at line" + (tokens[tokenCounter].Line + 1);
-                        errorMessages.Add(msg);
+                        errorMessages.Add("Identifier already taken at line" + (tokens[tokenCounter].Line + 1));
                         return;
                     }
                     else
@@ -836,17 +1074,9 @@ namespace CFPL
                     ParseEqual();
                 }
                 else
-                {
-                    msg = "Syntax Error. There is an excess comma at line " + (tokens[tokenCounter].Line + 1);
-                    errorMessages.Add(msg);
-                    Console.WriteLine(msg);
-                }
+                    errorMessages.Add("Syntax Error. There is an excess comma at line " + (tokens[tokenCounter].Line + 1));
                 if (tokens[tokenCounter].Type == TokenType.IDENTIFIER)
-                {
-                    msg = "Invalid Variable declaration at line " + (tokens[tokenCounter].Line + 1);
-                    errorMessages.Add(msg);
-                    Console.WriteLine(msg);
-                }
+                    errorMessages.Add("Invalid Variable declaration at line " + (tokens[tokenCounter].Line + 1));
             }
         }
         private void ParseEqual()
@@ -881,10 +1111,7 @@ namespace CFPL
                                 tokenCounter++;
                             }
                             else
-                            {
-                                msg = "Missing double quotes at line " + ((tokens[tokenCounter].Line + 1));
-                                errorMessages.Add(msg);
-                            }
+                                errorMessages.Add("Missing double quotes at line " + ((tokens[tokenCounter].Line + 1)));
                         }
                         else
                             errorMessages.Add(string.Format("Invalid variable declaration at line " + tokens[tokenCounter].Line + 1)); ;
@@ -919,10 +1146,8 @@ namespace CFPL
                         }
                         break;
                     default:
-                        msg = "Syntax Error at line " + ((tokens[tokenCounter].Line + 1));
-                        errorMessages.Add(msg);
+                        errorMessages.Add("Syntax Error at line " + ((tokens[tokenCounter].Line + 1)));
                         tokenCounter++;
-                        Console.WriteLine(msg);
                         break;
                 }
             }
@@ -946,10 +1171,7 @@ namespace CFPL
                                 else
                                     outputMap.Add(x, (int)declaredVariables[x]); //add it to the outputMap dictionary serves as final list for output
                             else
-                            {
-                                msg = "Type Error at line " + (tokens[tokenCounter].Line + 1);
-                                errorMessages.Add(msg);
-                            }
+                                errorMessages.Add("Identifier name already taken at line " + (tokens[tokenCounter].Line + 1));
                         }
                         else //if not declaredVariables just store 0 temporarily
                         {
@@ -967,7 +1189,7 @@ namespace CFPL
                         string x = varDeclareList[i];
                         if (declaredVariables.ContainsKey(x))
                         {
-                            if (declaredVariables[x].GetType() == typeof(Char))
+                            if (declaredVariables[x].GetType() == typeof(char))
                             {
                                 if (outputMap.ContainsKey(x))
                                     errorMessages.Add(string.Format("Identifier name already taken at line " + (tokens[tokenCounter].Line + 1)));
@@ -975,10 +1197,7 @@ namespace CFPL
                                     outputMap.Add(x, (char)declaredVariables[x]);
                             }
                             else
-                            {
-                                msg = "Type Error at line at line " + (tokens[tokenCounter].Line+1);
-                                errorMessages.Add(msg);
-                            }
+                                errorMessages.Add("Identifier name already taken at line " + (tokens[tokenCounter].Line + 1));
                         }
                         else
                         {
@@ -1005,10 +1224,7 @@ namespace CFPL
                                     outputMap.Add(x, (string)declaredVariables[x]);
                             }
                             else
-                            {
-                                msg = "Type error at line " + (tokens[tokenCounter].Line+1);
-                                errorMessages.Add(msg);
-                            }
+                                errorMessages.Add("Identifier name already taken at line " + (tokens[tokenCounter].Line + 1));
                         }
                         else
                         {
@@ -1030,15 +1246,12 @@ namespace CFPL
                             if (declaredVariables[x].GetType() == typeof(double))
                             {
                                 if (outputMap.ContainsKey(x))
-                                    errorMessages.Add(string.Format("Identifier name already taken at line " + (tokens[tokenCounter].Line + 1)));
+                                    errorMessages.Add(string.Format("(D)Identifier name already taken at line " + (tokens[tokenCounter].Line + 1)));
                                 else
                                     outputMap.Add(x, (double)declaredVariables[x]);
                             }
                             else
-                            {
-                                msg = "Type Error at line " + (tokens[tokenCounter].Line+1);
-                                errorMessages.Add(msg);
-                            }
+                                errorMessages.Add("Must have a decimal part. Error at line " + (tokens[tokenCounter].Line + 1));
                         }
                         else
                         {
@@ -1050,56 +1263,105 @@ namespace CFPL
                     varDeclareList.Clear(); //clear the variable list
                     break;
                 default:
-                    msg = "Syntax Error at line " + ((tokens[tokenCounter].Line + 1));
-                    Console.WriteLine(msg);
-                    errorMessages.Add(msg);
+                    errorMessages.Add("Syntax Error at line " + (tokens[tokenCounter].Line + 1));
                     break;
             }
         }
-        public bool isOperator(char x)
-        {
-            return (x == '+' || x == '-' || x == '*' || x == '/' || x == '%');
-        }
+
         public bool getInfix()
         {
+            Operations o = new Operations();
             infixTokens = new List<Tokens>();
             int line = tokens[tokenCounter - 1].Line;
-            int n;
-            double m;
+            int temp_value;
+            double iden_value;
             bool isFirst = true;
             bool error = false;
             while (line >= tokens[tokenCounter].Line)
             {
-                // infixTokens is a list of tokens found in the expression,
+                // infixTokens is just a list of tokens found in the expression,
                 // that is to be used in converting infix to postfix
+                if (tokens[tokenCounter].Type == TokenType.MULT)
+                {
+                    if (tokens[tokenCounter - 1].Type == TokenType.RIGHT_PAREN || tokens[tokenCounter - 1].Type == TokenType.RIGHT_BRACE ||
+                           tokens[tokenCounter - 1].Type == TokenType.FLOAT_LIT || tokens[tokenCounter - 1].Type == TokenType.INT_LIT ||
+                           tokens[tokenCounter - 1].Type == TokenType.IDENTIFIER)
+                    { }
+                    else
+                    {
+                        int hereline = tokens[tokenCounter].Line; // comment's line
+                        while (hereline >= tokens[tokenCounter].Line) // skip all tokens with the same line as comment's 
+                            tokenCounter++;
+                    }
+                }
 
-                // unary, a = -2, a = a + -2
+                // unary for arithmetic expression, a = -b, a = -10, a = c + -b
                 if ((tokens[tokenCounter].Type == TokenType.ADD || tokens[tokenCounter].Type == TokenType.SUBT)
-                    && (isFirst || isOperator(tokens[tokenCounter - 1].Lexeme[0]))
+                    && (isFirst || o.isArithmeticOperator(tokens[tokenCounter - 1].Lexeme) || o.isRelationalOperator(tokens[tokenCounter - 1].Lexeme))
                     && (tokens[tokenCounter + 1].Type == TokenType.IDENTIFIER || tokens[tokenCounter + 1].Type != TokenType.BOOL_LIT
-                    || tokens[tokenCounter + 1].Type == TokenType.INT_LIT || tokens[tokenCounter + 1].Type != TokenType.FLOAT_LIT))
+                    || tokens[tokenCounter + 1].Type == TokenType.INT_LIT || tokens[tokenCounter + 1].Type == TokenType.FLOAT_LIT))
                 {
                     if (tokens[tokenCounter].Type == TokenType.SUBT)
                     {
                         tokenCounter++; // points to literal
 
-                        m = Convert.ToDouble(tokens[tokenCounter].Lexeme);
-                        m *= -1;
-                        if (tokens[tokenCounter].Type == TokenType.INT_LIT)
+                        if (tokens[tokenCounter].Type == TokenType.IDENTIFIER)
                         {
-                            n = (int)m;
-                            infixTokens.Add(new Tokens(tokens[tokenCounter].Type, n.ToString(), n, tokens[tokenCounter].Line));
-                        }
-                        else
-                        {
-                            infixTokens.Add(new Tokens(tokens[tokenCounter].Type, m.ToString(), m, tokens[tokenCounter].Line));
-                            return true;
-                        }
+                            string iden = tokens[tokenCounter].Lexeme;
+                            if (outputMap.ContainsKey(iden))
+                            {
+                                if (outputMap[iden].GetType() == typeof(int) || outputMap[iden].GetType() == typeof(double))
+                                {
+                                    iden_value = Convert.ToDouble(outputMap[iden]);
+                                    iden_value *= -1;
+                                    if (outputMap[iden].GetType() == typeof(int))
+                                    {
+                                        temp_value = (int)iden_value;
+                                        infixTokens.Add(new Tokens(TokenType.INT_LIT, temp_value.ToString(), temp_value, tokens[tokenCounter].Line));
+                                    }
+                                    else
+                                        infixTokens.Add(new Tokens(TokenType.FLOAT_LIT, iden_value.ToString(), iden_value, tokens[tokenCounter].Line));
 
+                                    Console.WriteLine("Pushed " + tokens[tokenCounter].Type + ", " + tokens[tokenCounter].Lexeme + " to infix tokens");
+                                }
+                                else // other data types, string or char
+                                {
+                                    errorMessages.Add("(UNARY)Invalid expression at line " + tokens[tokenCounter].Line);
+                                    return true;
+                                }
+                            }
+                            else
+                            {
+                                errorMessages.Add("Alien identifier found at line " + (tokens[tokenCounter].Line + 1));
+                                return true;
+                            }
+                        }
+                        else // int_lit, float_lit
+                        {
+                            if (tokens[tokenCounter].Literal.GetType() == typeof(int) || tokens[tokenCounter].Literal.GetType() == typeof(double))
+                            {
+                                iden_value = Convert.ToDouble(tokens[tokenCounter].Lexeme);
+                                iden_value *= -1;
+                                if (tokens[tokenCounter].Type == TokenType.INT_LIT)
+                                {
+                                    temp_value = (int)iden_value;
+                                    infixTokens.Add(new Tokens(tokens[tokenCounter].Type, temp_value.ToString(), temp_value, tokens[tokenCounter].Line));
+                                }
+                                else
+                                    infixTokens.Add(new Tokens(tokens[tokenCounter].Type, iden_value.ToString(), iden_value, tokens[tokenCounter].Line));
+
+                                Console.WriteLine("Pushed " + tokens[tokenCounter].Type + ", " + tokens[tokenCounter].Lexeme + " to infix tokens");
+                            }
+                            else
+                            {
+                                errorMessages.Add("Invalid arithmetic expression at line " + (tokens[tokenCounter].Line + 1));
+                                return true;
+                            }
+
+                        }
                     }
-
                 }
-                // the NOT token will not be added into the infixTokens list.
+                // unary for boolean expression
                 else if (tokens[tokenCounter].Type == TokenType.NOT)
                 {
                     bool logic, open, close;
@@ -1110,7 +1372,7 @@ namespace CFPL
                         open = true;
                         tokenCounter++;
                     }
-                    // NOT A
+                    // NOT <IDENTIFER>, NOT A
                     if (tokens[tokenCounter].Type == TokenType.IDENTIFIER)
                     {// check if identifier is declared, and is of type string
                         string temp_ident2 = tokens[tokenCounter].Lexeme;
@@ -1123,11 +1385,11 @@ namespace CFPL
                                 // Even though this is an identifier, the TokenType should be bool_lit, 
                                 // bcs temp_ident2's  value is not inverted, and temp_ident2 has no Tokens.Literal value
                                 infixTokens.Add(new Tokens(TokenType.BOOL_LIT, logic.ToString(), logic.ToString(), tokens[tokenCounter].Line));
-                                //Console.WriteLine(infixTokens.Count);
+                                Console.WriteLine("Pushed " + tokens[tokenCounter].Type + ", " + tokens[tokenCounter].Lexeme + " to infix tokens");
                             }
                             else
                             {
-                                errorMessages.Add("Invalid identifier type at line " + (tokens[tokenCounter].Line + 1));
+                                errorMessages.Add("Invalid boolean expression type at line " + (tokens[tokenCounter].Line + 1));
                                 return true;
                             }
 
@@ -1139,22 +1401,22 @@ namespace CFPL
                         }
                         if (open)
                             tokenCounter++;
-                    } // NOT "TRUE"
+                    } // NOT "<BOOL_LIT>", NOT "TRUE"
                     else if (tokens[tokenCounter].Type == TokenType.DOUBLE_QUOTE)
                     {
                         tokenCounter++;
-
                         if (tokens[tokenCounter].Type == TokenType.BOOL_LIT)
                         {
                             logic = bool.Parse(tokens[tokenCounter].Lexeme);
                             logic = !logic;
+                            Console.WriteLine("Pushed " + tokens[tokenCounter].Type + ", " + tokens[tokenCounter].Lexeme + " to infix tokens");
                             infixTokens.Add(new Tokens(tokens[tokenCounter].Type, logic.ToString(), logic.ToString(), tokens[tokenCounter].Line));
 
                             tokenCounter++;
                         }
                         else // NOT 5, INT_LIT
                         {
-                            errorMessages.Add(string.Format("Invalid expression after NOT at line " + (tokens[tokenCounter].Line + 1)));
+                            errorMessages.Add(string.Format("Invalid boolean expression  at line " + (tokens[tokenCounter].Line + 1)));
                             return true;
                         }
                         if (tokens[tokenCounter].Type == TokenType.DOUBLE_QUOTE)
@@ -1179,14 +1441,16 @@ namespace CFPL
 
                         }
                         if (open && !close)
+                        {
                             errorMessages.Add(string.Format("Expected right parenthesis at line " + (tokens[tokenCounter].Line + 1)));
+                            return true;
+                        }
                     }
                     else
                     {
                         errorMessages.Add(string.Format("Incorrect usage of bool literal at line " + (tokens[tokenCounter].Line + 1)));
                         return true;
                     }
-
                 }
                 else if (tokens[tokenCounter].Type == TokenType.DOUBLE_QUOTE)
                 {
@@ -1195,6 +1459,7 @@ namespace CFPL
                     if (tokens[tokenCounter].Type == TokenType.BOOL_LIT)
                     {
                         logic = bool.Parse(tokens[tokenCounter].Lexeme);
+                        Console.WriteLine("Pushed " + tokens[tokenCounter].Type + ", " + tokens[tokenCounter].Lexeme + " to infix tokens");
                         infixTokens.Add(new Tokens(tokens[tokenCounter].Type, logic.ToString(), logic.ToString(), tokens[tokenCounter].Line));
                         tokenCounter++;
                     }
@@ -1217,21 +1482,307 @@ namespace CFPL
                     errorMessages.Add(string.Format("Invalid usage of bool literal at line " + (tokens[tokenCounter].Line + 1)));
                     return true;
                 }
-                else if (tokens[tokenCounter].Type == TokenType.IDENTIFIER)
+                /*else if (tokens[tokenCounter].Type == TokenType.IDENTIFIER)
                 { // check identifier if declared
-                    string temp_ident2 = tokens[tokenCounter].Lexeme;
+                    
+                    Console.WriteLine("TEMP_IDENT = " + temp_ident + " VALUE: " + outputMap[temp_ident] + "TYPE: " + outputMap[temp_ident].GetType());
+                    Console.WriteLine("TEMP_IDENT2 = " + temp_ident2+ " VALUE: " + outputMap[temp_ident2] + " TYPE:" + outputMap[temp_ident2].GetType());
+
                     if (outputMap.ContainsKey(temp_ident2))
-                        infixTokens.Add(tokens[tokenCounter]);
+                    {
+                        // int(A) = B
+                        if (outputMap[temp_ident].GetType() == typeof(int) || outputMap[temp_ident].GetType() == typeof(double))
+                        {
+                            if(outputMap[temp_ident2].GetType() == typeof(int) || outputMap[temp_ident2].GetType() == typeof(double))
+                                infixTokens.Add(tokens[tokenCounter]);
+                            else
+                            {
+                                errorMessages.Add("(I)Invalid expression at line " + (tokens[tokenCounter].Line + 1));
+                                return true;
+                            }
+                        }
+                        else if (outputMap[temp_ident].GetType() == typeof(char))
+                        {
+                            if (outputMap[temp_ident2].GetType() == typeof(char))
+                                infixTokens.Add(tokens[tokenCounter]);
+                            else
+                            {
+                                errorMessages.Add("(C)Invalid expression at line " + (tokens[tokenCounter].Line + 1));
+                                return true;
+                            }
+                        }
+                        else // for boolean
+                        {
+                            
+                        }
+                            infixTokens.Add(tokens[tokenCounter]);
+                    }
                     else
                     {
                         errorMessages.Add("Alien identifier at line " + tokens[tokenCounter].Line + 1);
                         return true;
                     }
-
-                }
+                        
+                }*/
                 else
-                    infixTokens.Add(tokens[tokenCounter]);
+                {
 
+                    // code below will just check if the use of operators is correct.
+                    // left operand and right operand must be of the same type.
+                    // except when using arithmetic operation on int and float.
+                    string x = tokens[tokenCounter].Lexeme;
+
+                    //Console.WriteLine("VALUE OF X IS " + x.ToString());
+                    if (o.isOperator(x))
+                    {
+
+                        string leftOp, rightOp;
+                        bool leftIsInt, rightIsInt;
+                        leftIsInt = rightIsInt = true;
+
+                        // get data type of left operand
+                        if (tokens[tokenCounter - 1].Type == TokenType.IDENTIFIER)
+                        {
+                            string identifier = tokens[tokenCounter - 1].Lexeme;
+                            // check first if identifier is already declared
+                            if (outputMap.ContainsKey(identifier))
+                            {
+                                if (outputMap[identifier].GetType() == typeof(int) || outputMap[identifier].GetType() == typeof(double))
+                                {
+                                    leftOp = "digit";
+                                    leftIsInt = outputMap[identifier].GetType() == typeof(int);
+                                }
+                                else if (outputMap[identifier].GetType() == typeof(string))
+                                    leftOp = "bool";
+                                else if (outputMap[identifier].GetType() == typeof(char))
+                                    leftOp = "char";
+                                else
+                                {
+                                    errorMessages.Add("Invalid data type at line " + tokens[tokenCounter].Line + 1);
+                                    return true;
+                                }
+                            }
+                            else
+                            {
+                                errorMessages.Add("Alien identifier at line " + tokens[tokenCounter].Line + 1);
+                                return true;
+                            }
+                        }// check if left operand is a literal
+                        else if (tokens[tokenCounter - 1].Type == TokenType.BOOL_LIT || tokens[tokenCounter - 1].Type == TokenType.CHAR_LIT
+                             || tokens[tokenCounter - 1].Type == TokenType.INT_LIT || tokens[tokenCounter - 1].Type == TokenType.FLOAT_LIT)
+                        {
+                            if (tokens[tokenCounter - 1].Type == TokenType.INT_LIT || tokens[tokenCounter - 1].Type == TokenType.FLOAT_LIT)
+                            {
+                                leftOp = "digit";
+                                leftIsInt = tokens[tokenCounter - 1].Type == TokenType.INT_LIT;
+                            }
+                            else if (tokens[tokenCounter - 1].Type == TokenType.BOOL_LIT)
+                                leftOp = "bool";
+                            else
+                                leftOp = "char";
+                        }
+                        else if (tokens[tokenCounter - 1].Type == TokenType.RIGHT_PAREN)
+                            leftOp = "right_paren";
+                        else if (tokens[tokenCounter - 1].Type == TokenType.DOUBLE_QUOTE)
+                            leftOp = "quotes";
+                        else
+                        {
+                            errorMessages.Add("Invalid usage of operator at line " + (tokens[tokenCounter].Line + 1));
+                            return true;
+                        }
+
+                        // get data type of right operand
+                        if (tokens[tokenCounter + 1].Type == TokenType.IDENTIFIER)
+                        {
+                            string identifier = tokens[tokenCounter + 1].Lexeme;
+                            // check first if identifier is already declared
+                            if (outputMap.ContainsKey(identifier))
+                            {
+                                if (outputMap[identifier].GetType() == typeof(int) || outputMap[identifier].GetType() == typeof(double))
+                                {
+                                    rightOp = "digit";
+                                    rightIsInt = outputMap[identifier].GetType() == typeof(int);
+                                }
+                                else if (outputMap[identifier].GetType() == typeof(string))
+                                    rightOp = "bool";
+                                else if (outputMap[identifier].GetType() == typeof(char))
+                                    rightOp = "char";
+                                else
+                                {
+                                    errorMessages.Add("Invalid data type at line " + (tokens[tokenCounter].Line + 1));
+                                    return true;
+                                }
+                            }
+                            else
+                            {
+                                errorMessages.Add("Alien identifier at line " + (tokens[tokenCounter].Line + 1));
+                                return true;
+                            }
+                        }// check if right operand is a literal
+                        else if (tokens[tokenCounter + 1].Type == TokenType.BOOL_LIT || tokens[tokenCounter + 1].Type == TokenType.CHAR_LIT
+                             || tokens[tokenCounter + 1].Type == TokenType.INT_LIT || tokens[tokenCounter + 1].Type == TokenType.FLOAT_LIT)
+                        {
+                            if (tokens[tokenCounter + 1].Type == TokenType.INT_LIT || tokens[tokenCounter + 1].Type == TokenType.FLOAT_LIT)
+                            {
+                                rightOp = "digit";
+                                rightIsInt = tokens[tokenCounter + 1].Type == TokenType.INT_LIT;
+                            }
+                            else if (tokens[tokenCounter + 1].Type == TokenType.BOOL_LIT)
+                                rightOp = "bool";
+                            else
+                                rightOp = "char";
+                        }
+                        else if (tokens[tokenCounter + 1].Type == TokenType.LEFT_PAREN)
+                            rightOp = "left_paren";
+                        else if (tokens[tokenCounter + 1].Type == TokenType.DOUBLE_QUOTE)
+                            rightOp = "quotes";
+                        else if (tokens[tokenCounter + 1].Type == TokenType.SUBT || tokens[tokenCounter + 1].Type == TokenType.ADD || tokens[tokenCounter + 1].Type == TokenType.NOT)
+                            rightOp = "unary";
+                        else
+                        {
+                            errorMessages.Add("Invalid usage of operator at line " + (tokens[tokenCounter].Line + 1));
+                            return true;
+                        }
+                        // evaluate
+                        if (o.isLogicalOperator(x))
+                        {
+
+                        }
+                        else
+                        {
+                            if (leftOp != rightOp)
+                            {
+                                if (leftOp == "right_paren" || rightOp == "left_paren" || rightOp == "unary")
+                                { } // just do nothing
+                                else if (leftOp == "quotes" || rightOp == "quotes")
+                                { }
+                                else
+                                {
+                                    errorMessages.Add("Can't do operations between two different data types. Found at line " + (tokens[tokenCounter].Line + 1));
+                                    return true;
+                                }
+                            }
+                            else
+                            {
+                                if (o.isArithmeticOperator(x))
+                                {
+                                    // will just check leftOp since it has the same value as rightOp
+                                    if (leftOp != "digit")
+                                    {// either boolean or char, which is not applicable for arithmetic operations
+                                        errorMessages.Add("Invalid usage of arithmetic operator at line " + (tokens[tokenCounter].Line + 1));
+                                        return true;
+                                    }
+                                }
+                                else if (x == "==" || x == "<>")
+                                {
+                                    if (leftOp == "digit")
+                                    {
+                                        // the concept is that, left and right operand should be of the same value,
+                                        // so that equals and not equals is applicable.
+                                        // the left side means both of them are int, while the right side means both of them are float
+                                        if ((leftIsInt && rightIsInt) || (!leftIsInt && !rightIsInt))
+                                        {// just do nothing
+                                        }
+                                        else
+                                        {
+                                            errorMessages.Add("Invalid usage of relational operator at line " + (tokens[tokenCounter].Line + 1));
+                                            return true;
+                                        }
+                                    }
+                                }
+                                else if (o.isRelationalOperator(x))
+                                {
+                                    if (leftOp == "digit")
+                                    {
+                                        // the concept is that, left and right operand should be of the same value,
+                                        // so that equals and not equals is applicable.
+                                        // the left side means both of them are int, while the right side means both of them are float
+                                        if ((leftIsInt && rightIsInt) || (!leftIsInt && !rightIsInt))
+                                        {// just do nothing
+                                        }
+                                        else
+                                        {
+                                            errorMessages.Add("Invalid usage of relational operator at line " + (tokens[tokenCounter].Line + 1));
+                                            return true;
+                                        }
+                                    }
+                                    else
+                                    { // either boolean or char, which is not applicable for relational operations
+                                        errorMessages.Add("Invalid usage of relational operator at line " + (tokens[tokenCounter].Line + 1));
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                        /*
+                        if (leftOp != rightOp)
+                        {
+                            errorMessages.Add("Can't do operations between two different data types. Found at line " + (tokens[tokenCounter].Line + 1));
+                            return true;
+                        }
+                        else
+                        {
+                            if (o.isArithmeticOperator(x))
+                            {
+                                // will just check leftOp since it has the same value as rightOp
+                                if (leftOp != "digit")
+                                {// either boolean or char, which is not applicable for arithmetic operations
+                                    errorMessages.Add("Invalid usage of arithmetic operator at line " + (tokens[tokenCounter].Line + 1));
+                                    return true;
+                                }
+                            }
+                            else if (x == "==" || x == "<>")
+                            {
+                                if (leftOp == "digit")
+                                {
+                                    // the concept is that, left and right operand should be of the same value,
+                                    // so that equals and not equals is applicable.
+                                    // the left side means both of them are int, while the right side means both of them are float
+                                    if ((leftIsInt && rightIsInt) || (!leftIsInt && !rightIsInt))
+                                    {// just do nothing
+                                    }
+                                    else
+                                    {
+                                        errorMessages.Add("Invalid usage of relational operator at line " + (tokens[tokenCounter].Line + 1));
+                                        return true;
+                                    }
+                                }
+                            }
+                            else if (o.isRelationalOperator(x))
+                            {
+                                if (leftOp == "digit")
+                                {
+                                    // the concept is that, left and right operand should be of the same value,
+                                    // so that equals and not equals is applicable.
+                                    // the left side means both of them are int, while the right side means both of them are float
+                                    if ((leftIsInt && rightIsInt) || (!leftIsInt && !rightIsInt))
+                                    {// just do nothing
+                                    }
+                                    else
+                                    {
+                                        errorMessages.Add("Invalid usage of relational operator at line " + (tokens[tokenCounter].Line + 1));
+                                        return true;
+                                    }
+                                }
+                                else
+                                { // either boolean or char, which is not applicable for relational operations
+                                    errorMessages.Add("Invalid usage of relational operator at line " + (tokens[tokenCounter].Line + 1));
+                                    return true;
+                                }
+                            }
+                            else if (o.isLogicalOperator(x))
+                            {
+                                if (leftOp != "bool")
+                                {
+                                    errorMessages.Add("Invalid usage of logical operator at line " + (tokens[tokenCounter].Line + 1));
+                                    return true;
+                                }
+                            }
+                        }
+                        */
+                    }
+                    infixTokens.Add(tokens[tokenCounter]);
+                }
                 if (isFirst)// this is just used for identifying unary as the first element. like A = -4 + 6
                     isFirst = false;
 
@@ -1240,8 +1791,9 @@ namespace CFPL
             Console.WriteLine("\nINFIX EXPRESSION: ");
             foreach (Tokens x in infixTokens)
                 Console.WriteLine(x.Type + ", " + x.Lexeme);
-            Console.WriteLine("END OF INFIX");
+            Console.WriteLine("END OF INFIX\n");
             Console.WriteLine("TOKEN COUNTER NOW POINTS TO " + tokens[tokenCounter].Type);
+
             return error;
         }
         /// <summary>
@@ -1271,19 +1823,25 @@ namespace CFPL
             }
             return i;
         }
-        /// <summary>
-        /// Returns true if start or stop's position is valid.
-        /// Accepts which string to evaluate. (start|stop)
-        /// </summary>
-        /// <param name=""></param>
-        /// <returns></returns>
-
-        /*public bool isPositionValid(string str)
+        public bool isEscapeCharacter(string token)
         {
-            if(str.ToLower() == "start")
-                return tokens[tokenCounter - 1]
-            if(tokens[tokenCounter - 1].Line != tokens[tokenCounter].Line)
+            token = token.ToLower();
+            bool flag = false;
+            if (token == "ampersand")
+                flag = true;
+            else if (token == "sharp")
+                flag = true;
+            else if (token == "double_quote")
+                flag = true;
+            else if (token == "mult")
+                flag = true;
+            else if (token == "left_brace")
+                flag = true;
+            else if (token == "right_brace")
+                flag = true;
+
+            return flag;
         }
-        */
+
     }
 }
