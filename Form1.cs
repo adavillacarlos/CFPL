@@ -78,6 +78,7 @@ namespace CFPL
 
             if (errorLexer==0 && errorInterpreter == 0)
             {
+                richTextBox1.Text = "";
                 richTextBox2.Text = "Compiled Successfully";
                 richTextBox3.Text = "";
                 foreach (string a in interpreter.OutputMessages)
@@ -88,6 +89,7 @@ namespace CFPL
                 }
             } else
             {
+                richTextBox1.Text = ""; 
                 richTextBox2.Text = "";
                 richTextBox3.Text = "";
                 foreach (string a in lexer.ErrorMessages)

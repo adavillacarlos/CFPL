@@ -145,7 +145,7 @@ namespace CFPL
                 || postfix[ctr].Type == TokenType.IDENTIFIER || postfix[ctr].Type == TokenType.BOOL_LIT
                 || postfix[ctr].Type == TokenType.CHAR_LIT)
                 {
-                    Console.WriteLine("Pushed " + postfix[ctr].Lexeme + ", " + postfix[ctr].Literal + " to the stack");
+                    //Console.WriteLine("Pushed " + postfix[ctr].Lexeme + ", " + postfix[ctr].Literal + " to the stack");
                     stack.Push(postfixValues[ctr]);
                 }
                 else if (isOperator(postfixValues[ctr]))
@@ -319,6 +319,20 @@ namespace CFPL
                     }
                     else if (isLogicalOperator(postfixValues[ctr]))
                     {
+                        if (i1 == "True" || i1 == "False")
+                        { }
+                        else
+                        {
+                            errorMessages.Add("Invalid boolean expression at line " + (postfix[ctr].Line + 1));
+                            return "error";
+                        }
+                        if (i2 == "True" || i2 == "False")
+                        { }
+                        else
+                        {
+                            errorMessages.Add("Invalid boolean expression at line " + (postfix[ctr].Line + 1));
+                            return "error";
+                        }
                         bool b1 = Convert.ToBoolean(i1);
                         bool b2 = Convert.ToBoolean(i2);
                         if (postfixValues[ctr] == "AND")
@@ -334,7 +348,7 @@ namespace CFPL
                 }
                 ctr++;
             }
-            Console.WriteLine("STACK COUNT " + stack.Count());
+            //Console.WriteLine("STACK COUNT " + stack.Count());
             if (stack.Count != 0)
             {
                 Console.WriteLine("TO BE POPPED: STRING " + stack.Peek().ToString());
