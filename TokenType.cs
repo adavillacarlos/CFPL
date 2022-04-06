@@ -16,7 +16,7 @@ namespace CFPL
 
         TILDE,
         //Escape character
-        SPACE, SHARP, AMPERSAND, DOUBLE_QUOTE,//  # & "
+        SPACE, SHARP, AMPERSAND, DOUBLE_QUOTE, SINGLE_QUOTE,//  # & " '
 
         //Arithmetic
         MULT, ADD, SUBT, DIV, MOD, //* + - / %

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CFPL
 {
@@ -237,6 +235,7 @@ namespace CFPL
                             while (tokenCounter < closingStop)
                                 tokenCounter++;
                         }
+                        flagIf = 0; 
                         break;
                     case TokenType.IDENTIFIER:
                         temp_ident = tokens[tokenCounter].Lexeme;
@@ -274,7 +273,7 @@ namespace CFPL
                                             }
                                             else
                                             {
-                                                errorMessages.Add("(I)Invalid expression at line " + (tokens[tokenCounter].Line + 1));
+                                                errorMessages.Add("Invalid expression at line " + (tokens[tokenCounter].Line + 1));
                                                 return 1;
                                             }
                                         }
@@ -285,7 +284,7 @@ namespace CFPL
                                                 obj = output;
                                             else
                                             {
-                                                errorMessages.Add("(B)Invalid expression at line " + (tokens[tokenCounter].Line + 1));
+                                                errorMessages.Add("Invalid expression at line " + (tokens[tokenCounter].Line + 1));
                                                 return 1;
                                             }
                                         }
@@ -295,7 +294,7 @@ namespace CFPL
                                                 obj = char.Parse(output);
                                             else
                                             {
-                                                errorMessages.Add("(C)Invalid expression at line " + (tokens[tokenCounter].Line + 1));
+                                                errorMessages.Add("Invalid expression at line " + (tokens[tokenCounter].Line + 1));
                                                 return 1;
                                             }
                                         }
@@ -495,6 +494,7 @@ namespace CFPL
                             while (tokenCounter < closingStop)
                                 tokenCounter++;
                         }
+                        flagIf = 0; 
                         break;
                     case TokenType.IDENTIFIER:
                         temp_ident = tokens[tokenCounter].Lexeme;
@@ -1023,7 +1023,7 @@ namespace CFPL
                 }
             }
         }
-        
+
         /// <summary>
         /// ParseOutput:
         /// Saves the data inside the outputMap to the outputMessages for printing
@@ -1186,7 +1186,7 @@ namespace CFPL
 
         }
 
-        
+
         /// <summary>
         /// Helper Function for ParseDeclaration: 
         /// Used in Commas
@@ -1363,10 +1363,11 @@ namespace CFPL
                                 if (outputMap.ContainsKey(x))
                                     errorMessages.Add(string.Format("(FLOAT)Identifier name already taken at line " + (tokens[tokenCounter].Line + 1)));
                                 else
-                                    outputMap.Add(x, (double)declaredVariables[x]);
+                                    outputMap.Add(x, Convert.ToDouble(declaredVariables[x]));
                             }
+
                             else
-                                errorMessages.Add("Must have a decimal part. Error at line " + (tokens[tokenCounter].Line + 1));
+                                errorMessages.Add("Declared value is not a float. Error at line " + (tokens[tokenCounter].Line + 1));
                         }
                         else
                         {
@@ -1437,7 +1438,7 @@ namespace CFPL
                                     if (outputMap[iden].GetType() == typeof(int))
                                     {
                                         temp_value = (int)iden_value;
-                                        infixTokens.Add(new Tokens(TokenType.INT_LIT, temp_value.ToString(),temp_value, tokens[tokenCounter].Line));
+                                        infixTokens.Add(new Tokens(TokenType.INT_LIT, temp_value.ToString(), temp_value, tokens[tokenCounter].Line));
                                     }
                                     else
                                         infixTokens.Add(new Tokens(TokenType.FLOAT_LIT, iden_value.ToString(), iden_value, tokens[tokenCounter].Line));
@@ -1526,7 +1527,7 @@ namespace CFPL
                         {
                             logic = bool.Parse(tokens[tokenCounter].Lexeme);
                             logic = !logic;
-                            infixTokens.Add(new Tokens(tokens[tokenCounter].Type, logic.ToString(), logic.ToString(),  tokens[tokenCounter].Line));
+                            infixTokens.Add(new Tokens(tokens[tokenCounter].Type, logic.ToString(), logic.ToString(), tokens[tokenCounter].Line));
 
                             tokenCounter++;
                         }

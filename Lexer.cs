@@ -88,6 +88,11 @@ namespace CFPL
                         tokens.Add(new Tokens(TokenType.DOUBLE_QUOTE, x.ToString(), null, line));
                         charCounter++;
                         break;
+                    /*case '\'':
+                        tokens.Add(new Tokens(TokenType.SINGLE_QUOTE, x.ToString(), null, line));
+                        charCounter++;
+                        break;
+                   */
                     case ' ':
                         //tokens.Add(new Tokens(TokenType.SPACE, x.ToString(), null, line));
                         charCounter++;
@@ -194,6 +199,7 @@ namespace CFPL
                         {
                             CharVal(x);
                         }
+ 
                         else
                         {
                             errorMessages.Add("Encountered unsupported character: " + x + " at line " + (line + 1));
