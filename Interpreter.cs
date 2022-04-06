@@ -1042,12 +1042,12 @@ namespace CFPL
                 {
                     switch (tokens[tokenCounter].Type)
                     {
-                        case TokenType.MULT:
+                        /*case TokenType.MULT:
                             int thisline = tokens[tokenCounter].Line;
                             while (thisline == tokens[tokenCounter].Line)
                                 tokenCounter++;
                             return;
-
+                        */ 
                         case TokenType.IDENTIFIER:
                         case TokenType.LEFT_PAREN:
                             errorFound = getInfix();
@@ -1358,7 +1358,7 @@ namespace CFPL
 
                         if (declaredVariables.ContainsKey(x))
                         {
-                            if (declaredVariables[x].GetType() == typeof(double))
+                            if (declaredVariables[x].GetType() == typeof(double) || declaredVariables[x].GetType() == typeof(int))
                             {
                                 if (outputMap.ContainsKey(x))
                                     errorMessages.Add(string.Format("(FLOAT)Identifier name already taken at line " + (tokens[tokenCounter].Line + 1)));
