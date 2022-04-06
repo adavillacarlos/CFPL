@@ -197,7 +197,7 @@ namespace CFPL
                             } // no start after IF
                             else
                             {
-                                errorMessages.Add(string.Format("(IF) Missing Start at " + (tokens[tokenCounter].Line + 1)));
+                                errorMessages.Add(string.Format("IF is missing START at " + (tokens[tokenCounter].Line + 1)));
                                 return 1;
                             }
                         }
@@ -225,7 +225,7 @@ namespace CFPL
                         }
                         else
                         {
-                            errorMessages.Add(string.Format("(ELSE) Missing Start at line " + (tokens[tokenCounter].Line + 1)));
+                            errorMessages.Add(string.Format("ELSE is Missing START at line " + (tokens[tokenCounter].Line + 1)));
                             return 1;
                         }
                         // back to Token ELSE
@@ -362,7 +362,7 @@ namespace CFPL
                         break;
                     default:
                         Console.WriteLine(tokens[tokenCounter].Type + ", " + tokens[tokenCounter].Lexeme);
-                        errorMessages.Add("(mainparse)Syntax error at line " + (tokens[tokenCounter].Line + 1));
+                        errorMessages.Add("Syntax error at line " + (tokens[tokenCounter].Line + 1));
                         return 1;
 
                 }
@@ -1023,10 +1023,11 @@ namespace CFPL
                 }
             }
         }
-        /*
-         * ParseOutput:
-         * Saves the data inside the outputMap to the outputMessages for printing
-         */
+        
+        /// <summary>
+        /// ParseOutput:
+        /// Saves the data inside the outputMap to the outputMessages for printing
+        /// </summary>
         private void ParseOutput()
         {
             Console.WriteLine("HERE AT PARSE OUTPUT");
@@ -1150,11 +1151,13 @@ namespace CFPL
             else
                 errorMessages.Add("Syntax Error. Something wrong with the OUTPUT at line " + (tokens[tokenCounter].Line + 1));
         }
-        /* 
-         * ParseDeclaration: 
-         * Gets the declared variable name then saves it to the declaredVariables dictionary 
-         * If it does have a declared value, it gets passed to the ParseEqual() function
-         */
+        /// 
+        /// <summary>
+        /// ParseDeclaration: 
+        /// Gets the declared variable name then saves it to the declaredVariables dictionary 
+        /// If it does have a declared value, it gets passed to the ParseEqual() function
+        /// </summary>
+        ///
         private void ParseDeclaration()
         {
             if (tokens[tokenCounter].Type == TokenType.IDENTIFIER)
@@ -1183,10 +1186,11 @@ namespace CFPL
 
         }
 
-        /* 
-         * Helper Function for ParseDeclaration: 
-         * Used in Commas 
-         */
+        
+        /// <summary>
+        /// Helper Function for ParseDeclaration: 
+        /// Used in Commas
+        /// </summary>
         private void ParseCommas()
         {
             while (tokens[tokenCounter].Type == TokenType.COMMA)
@@ -1258,8 +1262,10 @@ namespace CFPL
             }
         }
 
-        //Checks the token type after the keyword AS  
-        //Also saves to the outputmap 
+        /// <summary>
+        /// Checks the token type after the keyword AS  
+        /// Also saves to the outputmap 
+        /// </summary>
         private void ParseAs()
         {
             switch (tokens[tokenCounter].Type)
