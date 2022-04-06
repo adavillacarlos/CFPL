@@ -90,6 +90,7 @@ namespace CFPL
             foreach (Tokens x in postfix)
                 Console.WriteLine(x.Type + ", " + x.Lexeme);
             Console.WriteLine("END OF POSTFIX\n");
+
             return postfix;
         }
         public string evaluateExpression(List<Tokens> postfix)
@@ -150,10 +151,25 @@ namespace CFPL
                 }
                 else if (isOperator(postfixValues[ctr]))
                 {
+                    if (stack.Count < 2)
+                    {
+                        errorMessages.Add("Invalid expression at line " + (postfix[ctr].Line + 1));
+                        return "error";
+                    }
                     string i1 = stack.Pop();
                     string i2 = stack.Pop();
                     if (isArithmeticOperator(postfixValues[ctr]))
                     {
+                        if (!isDigit(i1))
+                        {
+                            errorMessages.Add("Invalid arithmetic expression at line " + (postfix[ctr].Line + 1));
+                            return "error";
+                        }
+                        if (!isDigit(i2))
+                        {
+                            errorMessages.Add("Invalid arithmetic expression at line " + (postfix[ctr].Line + 1));
+                            return "error";
+                        }
                         double n1 = double.Parse(i1);
                         double n2 = double.Parse(i2);
                         if (postfixValues[ctr] == "+")
@@ -170,6 +186,7 @@ namespace CFPL
                     }
                     else if (postfixValues[ctr] == "==" || postfixValues[ctr] == "<>")
                     {
+
                         if (postfix[ctr - 2].Type == TokenType.IDENTIFIER)
                         {
                             string iden = postfix[ctr - 2].Lexeme;
@@ -304,8 +321,19 @@ namespace CFPL
                     }
                     else if (isRelationalOperator(postfixValues[ctr]))
                     {
-                        int n1 = int.Parse(i1);
-                        int n2 = int.Parse(i2);
+
+                        if (!isDigit(i1))
+                        {
+                            errorMessages.Add("Invalid relational expression at line " + (postfix[ctr].Line + 1));
+                            return "error";
+                        }
+                        if (!isDigit(i2))
+                        {
+                            errorMessages.Add("Invalid relational expression at line " + (postfix[ctr].Line + 1));
+                            return "error";
+                        }
+                        double n1 = double.Parse(i1);
+                        double n2 = double.Parse(i2);
                         if (postfixValues[ctr] == ">")
                             flag = n2 > n1;
                         else if (postfixValues[ctr] == ">=")
@@ -319,6 +347,7 @@ namespace CFPL
                     }
                     else if (isLogicalOperator(postfixValues[ctr]))
                     {
+
                         if (i1 == "True" || i1 == "False")
                         { }
                         else
@@ -356,12 +385,6 @@ namespace CFPL
             return stack.Pop();
         }
         // helper functions
-        public bool isDigit(string x)
-        {
-
-            double i = double.Parse(x);
-            return (i >= 0 || i < 0);
-        }
         public bool isArithmeticOperator(string x)
         {
             return (x == "+" || x == "-" || x == "*" || x == "/" || x == "%");
@@ -394,6 +417,25 @@ namespace CFPL
                 return 1;
             else
                 return 0;
+        }
+        public bool isDigit(string s)
+        {
+            int ctr = 0;
+            // Console.WriteLine("STRING S PASSED IS " + s);
+            //  Console.WriteLine("isDigit('T') " + Char.IsDigit(s[ctr]));
+            int len = s.Length;
+            // 8.
+            if (s[(len - 1)] == '.')
+                return false;
+            while (ctr < len)
+            {
+                if (s[ctr] == '.' || s[ctr] == '+' || s[ctr] == '-')
+                    ctr++;
+                if (!Char.IsDigit(s[ctr]))
+                    return false;
+                ctr++;
+            }
+            return true;
         }
     }
 }

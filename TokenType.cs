@@ -13,18 +13,19 @@ namespace CFPL
         LEFT_BRACE, RIGHT_BRACE, //[]  
         COMMA, EQUALS, COLON,  // , =  :
 
-        //Escape character
-        SHARP, AMPERSAND, DOUBLE_QUOTE,//# & "
-        TILDE, 
 
-        //Operation
+        TILDE,
+        //Escape character
+        SPACE, SHARP, AMPERSAND, DOUBLE_QUOTE,//  # & "
+
+        //Arithmetic
         MULT, ADD, SUBT, DIV, MOD, //* + - / %
 
         //Logical
         GREATER, LESSER, // > <
         GREATER_EQUAL, LESSER_EQUAL, // >= <=
-
-        EQUAL, NOT_EQUAL, // = == <>
+        EQUAL, NOT_EQUAL, // == <>
+        AND, OR, NOT, // AND OR NOT
 
         //Variables
         IDENTIFIER, //^([A-Za-z+_+$][A-Za-z+_+$]*)
@@ -34,10 +35,11 @@ namespace CFPL
         BOOL_LIT,  //^(TRUE|FALSE)
 
         //RESERVED WORDS
-        VAR, AS, OUTPUT, IF, ELSE, ELIF,
-        WHILE, START, STOP, INT,
-        BOOL, FLOAT, CHAR,
-        AND, OR, NOT, INPUT, TRUE, FALSE,
-         
+        VAR, AS, OUTPUT,
+        IF, ELSE, ELIF, DO, WHILE, START, STOP,
+        INT, BOOL, FLOAT, CHAR,
+        INPUT, TRUE, FALSE,
+
     }
+   
 }

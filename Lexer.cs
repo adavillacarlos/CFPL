@@ -53,7 +53,7 @@ namespace CFPL
         //Adding character by character
         private void AnalyzeLine()
         {
-
+            int tokenCounter = 0; 
             currString = source[line];
             currStringLength = currString.Length;
 
@@ -105,7 +105,8 @@ namespace CFPL
                         charCounter++;
                         break;
                     case '*':
-                        if (charCounter == 0)
+                        tokenCounter = tokens.Count;
+                        if (charCounter == 0 || tokens[tokenCounter - 1].Line != line)
                         {
                             while (charCounter != currStringLength) { charCounter++; }
                         }
@@ -327,6 +328,9 @@ namespace CFPL
                     break;
                 case "IF":
                     tokens.Add(new Tokens(TokenType.IF, temp, null, line));
+                    break;
+                case "DO":
+                    tokens.Add(new Tokens(TokenType.DO, temp, null, line));
                     break;
                 case "WHILE":
                     tokens.Add(new Tokens(TokenType.WHILE, temp, null, line));
